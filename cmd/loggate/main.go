@@ -26,7 +26,7 @@ func main() {
 	logService := service.NewLogService([]ports.LogStorage{storage})
 
 	// --- Input/Driver Adapter ---
-	udpListener, err := udp.New(":3000", logService)
+	udpListener, err := udp.New(":10514", logService)
 	if err != nil {
 		log.Fatalf("FATAL: failed to create UDP listener: %v", err)
 	}
