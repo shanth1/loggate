@@ -1,5 +1,4 @@
 server:
-    test: "sdfsdf"
     listen_address: ":10514"
     metrics_address: "0.0.0.0:9100"
 
