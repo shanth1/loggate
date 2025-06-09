@@ -10,13 +10,19 @@ import (
 
 	"github.com/shanth1/loggate/internal/adapters/input/udp"
 	"github.com/shanth1/loggate/internal/adapters/output/console"
+	"github.com/shanth1/loggate/internal/config"
 	"github.com/shanth1/loggate/internal/core/ports"
 	"github.com/shanth1/loggate/internal/core/service"
+	"github.com/shanth1/loggate/pkg/configutil"
 )
 
 func main() {
 	// --- Сonfig ---
-	// TODO: config
+
+	cfg := &config.Config{}
+	if err := configutil.Load(configutil.GetConfigPath(), cfg); err != nil {
+		log.Fatalf("load config: %w", err)
+	}
 
 	// --- Output/Driven Adapters ---
 
@@ -26,7 +32,7 @@ func main() {
 	logService := service.NewLogService([]ports.LogStorage{storage})
 
 	// --- Input/Driver Adapter ---
-	udpListener, err := udp.New(":10514", logService)
+	udpListener, err := udp.New(cfg.Server.ListenAddress, logService)
 	if err != nil {
 		log.Fatalf("FATAL: failed to create UDP listener: %v", err)
 	}
