@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"os/signal"
@@ -14,6 +15,7 @@ import (
 	"github.com/shanth1/loggate/internal/core/ports"
 	"github.com/shanth1/loggate/internal/core/service"
 	"github.com/shanth1/loggate/pkg/configutil"
+	"github.com/shanth1/loggate/pkg/logger"
 )
 
 func main() {
@@ -23,6 +25,14 @@ func main() {
 	if err := configutil.Load(configutil.GetConfigPath(), cfg); err != nil {
 		log.Fatalf("load config: %v", err)
 	}
+
+	logger := logger.GetLogger("loggate", -1)
+
+	logger.Trace().Msg("Trace")
+	logger.Debug().Msg("Debug")
+	logger.Info().Str("test", "test").Msg("Info")
+	logger.Warn().Int("int", 16).Msg("Warn")
+	logger.Error().Err(errors.New("Errr")).Msg("Error")
 
 	// --- Output/Driven Adapters ---
 
@@ -61,6 +71,8 @@ func main() {
 
 	// --- Graceful Shutdown ---
 	ctx, cancel := context.WithCancel(context.Background())
+	ctx = logger.WithContext(ctx)
+
 	go udpListener.Start(ctx)
 
 	// TODO: HTTP server for Prometheus metrics
