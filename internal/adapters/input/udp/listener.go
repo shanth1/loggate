@@ -9,7 +9,6 @@ import (
 
 	"github.com/shanth1/loggate/internal/core/domain"
 	"github.com/shanth1/loggate/internal/core/ports"
-	"github.com/shanth1/loggate/pkg/logger"
 )
 
 type Listener struct {
@@ -32,9 +31,6 @@ func New(address string, ingester ports.LogIngester) (*Listener, error) {
 }
 
 func (l *Listener) Start(ctx context.Context) {
-	logger := logger.GetLoggerFromCtx(ctx)
-	logger.Info().Msg("From context")
-
 	log.Printf("INFO: UDP listener started on %s", l.conn.LocalAddr())
 	defer l.conn.Close()
 
