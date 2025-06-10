@@ -21,15 +21,37 @@ func main() {
 
 	cfg := &config.Config{}
 	if err := configutil.Load(configutil.GetConfigPath(), cfg); err != nil {
-		log.Fatalf("load config: %w", err)
+		log.Fatalf("load config: %v", err)
 	}
 
 	// --- Output/Driven Adapters ---
 
-	storage := console.New()
+	var storages []ports.LogStorage
+
+	for _, storageCfg := range cfg.Storages {
+		if !storageCfg.Enabled {
+			continue
+		}
+
+		var storage ports.LogStorage
+		switch storageCfg.Type {
+		case "console":
+			storage = console.New()
+		default:
+			log.Fatalf("unknown storage type: %s", storageCfg.Type)
+		}
+
+		if storage != nil {
+			storages = append(storages, storage)
+		}
+	}
+
+	if len(storages) == 0 {
+		log.Fatal("FATAL: no active storages cofigured")
+	}
 
 	// --- Core ---
-	logService := service.NewLogService([]ports.LogStorage{storage})
+	logService := service.NewLogService(storages)
 
 	// --- Input/Driver Adapter ---
 	udpListener, err := udp.New(cfg.Server.ListenAddress, logService)
@@ -49,6 +71,12 @@ func main() {
 
 	log.Println("INFO: Shutting down server...")
 	cancel()
+
+	for _, s := range storages {
+		if err := s.Close(); err != nil {
+			log.Printf("ERROR: close storage: %v", err)
+		}
+	}
 
 	log.Println("INFO: Server gracefully stopped.")
 }
