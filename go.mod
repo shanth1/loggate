@@ -4,7 +4,8 @@ go 1.23.2
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.28.0
-	github.com/rs/zerolog v1.34.0
+	github.com/shanth1/go-common/config v0.0.0-20250610132956-e6595d0ac97a
+	github.com/shanth1/go-common/logger v0.0.0-20250610132956-e6595d0ac97a
 	github.com/spf13/viper v1.20.1
 )
 
@@ -14,6 +15,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
+	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.12.0 // indirect

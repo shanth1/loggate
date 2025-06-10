@@ -8,21 +8,24 @@ import (
 	"os/signal"
 	"syscall"
 
+	goconfig "github.com/shanth1/go-common/config"
+	"github.com/shanth1/go-common/logger"
 	"github.com/shanth1/loggate/internal/adapters/input/udp"
 	"github.com/shanth1/loggate/internal/adapters/output/console"
 	"github.com/shanth1/loggate/internal/config"
 	"github.com/shanth1/loggate/internal/core/ports"
 	"github.com/shanth1/loggate/internal/core/service"
-	"github.com/shanth1/loggate/pkg/configutil"
 )
 
 func main() {
 	// --- Сonfig ---
 
 	cfg := &config.Config{}
-	if err := configutil.Load(configutil.GetConfigPath(), cfg); err != nil {
+	if err := goconfig.Load(goconfig.GetConfigPath(), cfg); err != nil {
 		log.Fatalf("load config: %v", err)
 	}
+
+	logger.GetLogger("loggate", -1)
 
 	// --- Output/Driven Adapters ---
 
