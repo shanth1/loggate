@@ -1,17 +1,15 @@
-// file: cmd/loggate/main.go
 package main
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
-	goconfig "github.com/shanth1/go-common/config"
-	"github.com/shanth1/go-common/logger"
 	"github.com/shanth1/loggate/internal/adapters/input/udp"
 	"github.com/shanth1/loggate/internal/adapters/output/console"
+	"github.com/shanth1/loggate/internal/common"
 	"github.com/shanth1/loggate/internal/config"
 	"github.com/shanth1/loggate/internal/core/ports"
 	"github.com/shanth1/loggate/internal/core/service"
@@ -20,12 +18,9 @@ import (
 func main() {
 	// --- Сonfig ---
 
-	cfg := &config.Config{}
-	if err := goconfig.Load(goconfig.GetConfigPath(), cfg); err != nil {
-		log.Fatalf("load config: %v", err)
-	}
+	cfg := config.MustGetConfig()
 
-	logger.GetLogger("loggate", -1)
+	logger := common.GetLogger()
 
 	// --- Output/Driven Adapters ---
 
@@ -41,7 +36,7 @@ func main() {
 		case "console":
 			storage = console.New()
 		default:
-			log.Fatalf("unknown storage type: %s", storageCfg.Type)
+			logger.Fatal().Msg(fmt.Sprintf("unknown storage type: %s", storageCfg.Type))
 		}
 
 		if storage != nil {
@@ -50,7 +45,7 @@ func main() {
 	}
 
 	if len(storages) == 0 {
-		log.Fatal("FATAL: no active storages cofigured")
+		logger.Fatal().Msg("no active storages cofigured")
 	}
 
 	// --- Core ---
@@ -59,11 +54,13 @@ func main() {
 	// --- Input/Driver Adapter ---
 	udpListener, err := udp.New(cfg.Server.ListenAddress, logService)
 	if err != nil {
-		log.Fatalf("FATAL: failed to create UDP listener: %v", err)
+		logger.Fatal().Err(err).Msg("new udp adapter")
 	}
 
 	// --- Graceful Shutdown ---
+
 	ctx, cancel := context.WithCancel(context.Background())
+	ctx = logger.WithContext(ctx)
 
 	go udpListener.Start(ctx)
 
@@ -73,14 +70,14 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("INFO: Shutting down server...")
+	logger.Info().Msg("shutting down server...")
 	cancel()
 
 	for _, s := range storages {
 		if err := s.Close(); err != nil {
-			log.Printf("ERROR: close storage: %v", err)
+			logger.Error().Err(err).Msg("close storage")
 		}
 	}
 
-	log.Println("INFO: Server gracefully stopped.")
+	logger.Info().Msg("server gracefully stopped")
 }

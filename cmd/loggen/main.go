@@ -1,9 +1,7 @@
-// file: cmd/loggen/main.go
 package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"sync"
@@ -11,34 +9,35 @@ import (
 
 	"github.com/shanth1/loggate/cmd/loggen/internal/config"
 	"github.com/shanth1/loggate/cmd/loggen/internal/worker"
+	"github.com/shanth1/loggate/internal/common"
 )
 
 func main() {
-	log.Println("INFO: Starting Log Generator...")
+	logger := common.GetGenLogger()
 
-	// 1. Загружаем конфигурацию
+	logger.Info().Msg("starting log generator...")
+
 	cfg, err := config.Load("cmd/loggen/config/config.yaml")
 	if err != nil {
-		log.Fatalf("FATAL: failed to load config: %v", err)
+		logger.Fatal().Err(err).Msg("failed to load config")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	ctx = logger.WithContext(ctx)
 	var wg sync.WaitGroup
 
-	// 2. Запускаем воркеры
 	for i := 0; i < cfg.Load.Workers; i++ {
 		wg.Add(1)
 		go worker.Start(ctx, &wg, i+1, cfg)
 	}
 
-	// 3. Ждем сигнала на завершение
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("INFO: Shutting down log generator...")
-	cancel()  // Отправляем сигнал на остановку всем воркерам
-	wg.Wait() // Ждем, пока все воркеры корректно завершатся
+	logger.Info().Msg("Shutting down log generator...")
+	cancel()
+	wg.Wait()
 
-	log.Println("INFO: Log generator stopped.")
+	logger.Info().Msg("log generator stopped")
 }

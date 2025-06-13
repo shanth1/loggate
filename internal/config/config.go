@@ -1,5 +1,11 @@
 package config
 
+import (
+	"log"
+
+	"github.com/shanth1/gotools/conf"
+)
+
 type Server struct {
 	ListenAddress  string `mapstructure:"listen_address"`
 	MetricsAddress string `mapstructure:"metrics_address"`
@@ -19,4 +25,13 @@ type Storage struct {
 type Config struct {
 	Server   Server    `mapstructure:"server"`
 	Storages []Storage `mapstructure:"storages"`
+}
+
+func MustGetConfig() *Config {
+	cfg := &Config{}
+	if err := conf.Load(conf.GetConfigPath(), cfg); err != nil {
+		log.Fatalf("load config: %v", err)
+	}
+
+	return cfg
 }

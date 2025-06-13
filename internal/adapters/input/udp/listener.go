@@ -4,9 +4,10 @@ package udp
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"net"
 
+	"github.com/shanth1/gotools/log"
 	"github.com/shanth1/loggate/internal/core/domain"
 	"github.com/shanth1/loggate/internal/core/ports"
 )
@@ -31,7 +32,10 @@ func New(address string, ingester ports.LogIngester) (*Listener, error) {
 }
 
 func (l *Listener) Start(ctx context.Context) {
-	log.Printf("INFO: UDP listener started on %s", l.conn.LocalAddr())
+	logger := log.FromCtx(ctx)
+
+	logger.Info().Msg(fmt.Sprintf("udp listener started on %s", l.conn.LocalAddr()))
+
 	defer l.conn.Close()
 
 	buffer := make([]byte, 65535)
@@ -39,18 +43,18 @@ func (l *Listener) Start(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("INFO: Shutting down UDP listener...")
+			logger.Info().Msg("shutting down UDP listener...")
 			return
 		default:
 			n, _, err := l.conn.ReadFromUDP(buffer)
 			if err != nil {
-				log.Printf("ERROR: reading from UDP: %v", err)
+				logger.Error().Err(err).Msg("reading from udp")
 				continue
 			}
 
 			var msg domain.LogMessage
 			if err := json.Unmarshal(buffer[:n], &msg); err != nil {
-				log.Printf("WARN: failed to unmarshal log: %v. Raw: %s", err, string(buffer[:n]))
+				logger.Warn().Err(err).Msg("failed to unmarshal log")
 				continue
 			}
 

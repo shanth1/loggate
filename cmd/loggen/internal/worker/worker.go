@@ -3,19 +3,22 @@ package worker
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"math/rand"
 	"net"
 	"sync"
 	"time"
 
+	"github.com/shanth1/gotools/log"
 	"github.com/shanth1/loggate/cmd/loggen/internal/config"
 	"github.com/shanth1/loggate/cmd/loggen/internal/generator"
 )
 
 func Start(ctx context.Context, wg *sync.WaitGroup, id int, cfg *config.Config) {
+	logger := log.FromCtx(ctx).With().Int("id", id).Logger()
+
 	defer wg.Done()
-	log.Printf("[Worker %d] Starting...", id)
+	logger.Info().Msg(fmt.Sprintf("[Worker %d] Starting...", id))
 
 	var generators []*generator.Generator
 	for i := range cfg.Templates {
@@ -23,13 +26,13 @@ func Start(ctx context.Context, wg *sync.WaitGroup, id int, cfg *config.Config) 
 	}
 
 	if len(generators) == 0 {
-		log.Printf("[Worker %d] No templates found, exiting.", id)
+		logger.Warn().Msg("no templates found, exiting")
 		return
 	}
 
 	conn, err := net.Dial("udp", cfg.Target)
 	if err != nil {
-		log.Printf("[Worker %d] ERROR: Could not connect to %s: %v", id, cfg.Target, err)
+		logger.Error().Err(err).Msg(fmt.Sprintf("could not connect to %s", cfg.Target))
 		return
 	}
 	defer conn.Close()
@@ -41,7 +44,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, id int, cfg *config.Config) 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Printf("[Worker %d] Stopping.", id)
+			logger.Info().Msg("stopped")
 			return
 		case <-ticker.C:
 			if cfg.Load.Jitter > 0 {
@@ -54,7 +57,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, id int, cfg *config.Config) 
 			payload, _ := json.Marshal(msg)
 			_, err := conn.Write(payload)
 			if err != nil {
-				log.Printf("[Worker %d] WARN: could not send log: %v", id, err)
+				logger.Warn().Err(err).Msg("could not send log")
 			}
 		}
 	}
