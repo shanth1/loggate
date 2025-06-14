@@ -3,20 +3,23 @@ server:
     metrics_address: "0.0.0.0:9100"
 
 storages:
-    - type: "console"
-      enabled: true
+    console_debug:
+        type: "console"
+        enabled: true
 
-    - type: "clickhouse"
-      enabled: false
-      dsn: "clickhouse://<user>:<password>@<host>:<port>/<database>?[params]"
+    clickhouse_main:
+        type: "clickhouse"
+        enabled: false
+        dsn: "clickhouse://<user>:<password>@<host>:<port>/<database>?[params]"
 
-    - type: "elasticsearch"
-      enabled: false
-      addresses: ["http://elasticsearch:9200"]
+routing_rules:
+    - match_condition:
+          service: "auth-service"
+          level: "INFO"
+      destinations: ["console_debug"]
 
-    - type: "influxdb"
-      enabled: false
-      url: "http://influxdb:8086"
-      token: "my-secret-token"
-      org: "my-org"
-      bucket: "logs"
+    - match:
+          service: "payment-gateway"
+      destinations: ["clickhouse_main"]
+
+default_destinations: ["console_debug"]

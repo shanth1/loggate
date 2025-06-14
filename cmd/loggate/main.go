@@ -24,9 +24,9 @@ func main() {
 
 	// --- Output/Driven Adapters ---
 
-	var storages []ports.LogStorage
+	storages := make(map[string]ports.LogStorage)
 
-	for _, storageCfg := range cfg.Storages {
+	for storageName, storageCfg := range cfg.Storages {
 		if !storageCfg.Enabled {
 			continue
 		}
@@ -40,7 +40,7 @@ func main() {
 		}
 
 		if storage != nil {
-			storages = append(storages, storage)
+			storages[storageName] = storage
 		}
 	}
 
@@ -49,7 +49,7 @@ func main() {
 	}
 
 	// --- Core ---
-	logService := service.NewLogService(storages)
+	logService := service.NewLogService(storages, cfg.RoutingRules, cfg.DefaultDestinations)
 
 	// --- Input/Driver Adapter ---
 	udpListener, err := udp.New(cfg.Server.ListenAddress, logService)
