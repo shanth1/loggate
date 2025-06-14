@@ -19,8 +19,9 @@ func main() {
 	// --- Сonfig ---
 
 	cfg := config.MustGetConfig()
-
 	logger := common.GetLogger()
+	ctx, cancel := context.WithCancel(context.Background())
+	ctx = logger.WithContext(ctx)
 
 	// --- Output/Driven Adapters ---
 
@@ -50,6 +51,7 @@ func main() {
 
 	// --- Core ---
 	logService := service.NewLogService(storages, cfg.RoutingRules, cfg.DefaultDestinations)
+	logService.Start(ctx)
 
 	// --- Input/Driver Adapter ---
 	udpListener, err := udp.New(cfg.Server.ListenAddress, logService)
@@ -58,9 +60,6 @@ func main() {
 	}
 
 	// --- Graceful Shutdown ---
-
-	ctx, cancel := context.WithCancel(context.Background())
-	ctx = logger.WithContext(ctx)
 
 	go udpListener.Start(ctx)
 
@@ -72,6 +71,8 @@ func main() {
 
 	logger.Info().Msg("shutting down server...")
 	cancel()
+
+	logService.Shutdown(ctx)
 
 	for _, s := range storages {
 		if err := s.Close(); err != nil {

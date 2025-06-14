@@ -16,10 +16,10 @@ func MustGetConfig() *Config {
 }
 
 type Config struct {
-	Server              Server             `mapstructure:"server"`
-	Storages            map[string]Storage `mapstructure:"storages"`
-	RoutingRules        []RoutingRule      `mapstructure:"routing_rules"`
-	DefaultDestinations []string           `mapstructure:"default_destinations"`
+	Server              *Server             `mapstructure:"server"`
+	Storages            map[string]*Storage `mapstructure:"storages"`
+	RoutingRules        []*RoutingRule      `mapstructure:"routing_rules"`
+	DefaultDestinations []string            `mapstructure:"default_destinations"`
 }
 
 type Server struct {
@@ -34,8 +34,8 @@ type Storage struct {
 }
 
 type RoutingRule struct {
-	MatchCondition MatchCondition `mapstructure:"match_condition"`
-	Destinations   []string       `mapstructure:"destinations"`
+	MatchCondition *MatchCondition `mapstructure:"match_condition"`
+	Destinations   []string        `mapstructure:"destinations"`
 }
 
 type MatchCondition struct {
