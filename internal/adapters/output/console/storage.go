@@ -16,7 +16,7 @@ func New() *Storage { return &Storage{} }
 func (s *Storage) Store(_ context.Context, messages []domain.LogMessage) error {
 	for _, msg := range messages {
 		raw, _ := json.Marshal(msg)
-		fmt.Printf("[CONSOLE STORAGE]: %s\n", string(raw))
+		fmt.Println(string(raw))
 	}
 	return nil
 }
