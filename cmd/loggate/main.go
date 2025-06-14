@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"os/signal"
 	"syscall"
 
@@ -16,11 +15,13 @@ import (
 )
 
 func main() {
-	// --- Сonfig ---
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
 
+	// --- Сonfig ---
 	cfg := config.MustGetConfig()
+
 	logger := common.GetLogger()
-	ctx, cancel := context.WithCancel(context.Background())
 	ctx = logger.WithContext(ctx)
 
 	// --- Output/Driven Adapters ---
@@ -65,12 +66,9 @@ func main() {
 
 	// TODO: HTTP server for Prometheus metrics
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	<-ctx.Done()
 
 	logger.Info().Msg("shutting down server...")
-	cancel()
 
 	logService.Shutdown(ctx)
 
