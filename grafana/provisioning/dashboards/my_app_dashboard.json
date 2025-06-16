@@ -1,0 +1,94 @@
+{
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "grafana",
+					"uid": "-- Grafana --"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"type": "dashboard"
+			}
+		]
+	},
+	"editable": true,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"links": [],
+	"liveNow": false,
+	"panels": [
+		{
+			"datasource": {
+				"type": "prometheus",
+				"uid": "Prometheus"
+			},
+			"fieldConfig": {},
+			"gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+			"id": 1,
+			"options": {},
+			"targets": [
+				{
+					"datasource": { "type": "prometheus", "uid": "Prometheus" },
+					"expr": "sum(rate(loggate_udp_packets_received_total[1m])) by (job)",
+					"legendFormat": "{{job}} UDP packets/sec"
+				}
+			],
+			"title": "Loggate UDP Packets Received",
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "loki",
+				"uid": "Loki"
+			},
+			"gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+			"id": 2,
+			"options": {},
+			"targets": [
+				{
+					"datasource": { "type": "loki", "uid": "Loki" },
+					"expr": "{job=\"loggate_forwarded\"}"
+				}
+			],
+			"title": "Forwarded Application Logs (from Loggate)",
+			"type": "logs"
+		},
+		{
+			"datasource": {
+				"type": "loki",
+				"uid": "Loki"
+			},
+			"gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+			"id": 3,
+			"options": {},
+			"targets": [
+				{
+					"datasource": { "type": "loki", "uid": "Loki" },
+					"expr": "{job=\"loggate_stdout\"}"
+				}
+			],
+			"title": "Loggate Internal Logs",
+			"type": "logs"
+		}
+	],
+	"refresh": "",
+	"schemaVersion": 38,
+	"tags": [],
+	"templating": {
+		"list": []
+	},
+	"time": {
+		"from": "now-1h",
+		"to": "now"
+	},
+	"timepicker": {},
+	"timezone": "",
+	"title": "Loggate Overview",
+	"uid": "990d4cfd-ba5c-487d-a7c3-93444b91007a",
+	"version": 1,
+	"weekStart": ""
+}

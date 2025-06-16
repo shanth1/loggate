@@ -1,0 +1,79 @@
+version: "3.8"
+
+services:
+    loggate:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: loggate-service
+        ports:
+            - "10514:10514/udp" # UDP порт для логов
+            - "9091:9091"
+        restart: unless-stopped
+        # Добавьте labels, если Promtail будет фильтровать по ним
+        # labels:
+        #   - "logging=promtail"
+
+    prometheus:
+        image: prom/prometheus:v2.47.0
+        container_name: prometheus
+        ports:
+            - "9090:9090"
+        volumes:
+            - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+            - prometheus_data:/prometheus
+        command:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--web.enable-lifecycle"
+        restart: unless-stopped
+        depends_on:
+            - loggate
+
+    loki:
+        image: grafana/loki:2.9.1
+        container_name: loki
+        ports:
+            - "3100:3100"
+        volumes:
+            - ./loki/loki-config.yaml:/etc/loki/local-config.yaml
+            - loki_data:/loki
+        command: -config.file=/etc/loki/local-config.yaml
+        restart: unless-stopped
+
+    promtail:
+        image: grafana/promtail:2.9.1
+        container_name: promtail
+        volumes:
+            - ./promtail/promtail-config.yaml:/etc/promtail/config.yaml
+            - /var/run/docker.sock:/var/run/docker.sock
+            - promtail_positions:/tmp
+        command: -config.file=/etc/promtail/config.yaml
+        restart: unless-stopped
+        depends_on:
+            - loki
+            - loggate
+
+    grafana:
+        image: grafana/grafana:10.1.1
+        container_name: grafana
+        ports:
+            - "3000:3000"
+        volumes:
+            - grafana_data:/var/lib/grafana
+            - ./grafana/provisioning/:/etc/grafana/provisioning/
+            # - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+        environment:
+            - GF_SECURITY_ADMIN_USER=admin
+            - GF_SECURITY_ADMIN_PASSWORD=admin!
+            - GF_USERS_ALLOW_SIGN_UP=false
+        restart: unless-stopped
+        depends_on:
+            - prometheus
+            - loki
+
+volumes:
+    prometheus_data:
+    loki_data:
+    promtail_positions:
+    grafana_data:
