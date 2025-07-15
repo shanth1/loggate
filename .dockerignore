@@ -1,0 +1,12 @@
+.git
+.idea
+*.md
+LICENSE
+deploy/
+docs/
+grafana/
+loki/
+prometheus/
+promtail/
+docker-compose.yaml
+Makefile

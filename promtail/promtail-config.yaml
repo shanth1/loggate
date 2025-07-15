@@ -3,22 +3,29 @@ server:
     grpc_listen_port: 0
 
 positions:
-    filename: /tmp/positions.yaml
+    filename: /tmp/positions/positions.yaml
 
 clients:
     - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-    - job_name: loggate_stdout # Логи самого loggate
+    - job_name: docker_logs
+      static_configs:
+          - targets: [localhost]
+            labels:
+                job: docker_compose_services
+                __path__: /var/log/docker_containers/*/*.log
+
       docker_sd_configs:
           - host: unix:///var/run/docker.sock
             refresh_interval: 5s
+
       relabel_configs:
           - source_labels: ["__meta_docker_container_name"]
-            regex: "/.*loggate.*"
-            action: keep
-          - source_labels: ["__meta_docker_container_name"]
             regex: "/(.*)"
-            target_label: "container"
-          - replacement: "loggate"
-            target_label: "origin"
+            target_label: "container_name"
+          - source_labels:
+                ["__meta_docker_container_label_com_docker_compose_service"]
+            target_label: "service_name"
+          - source_labels: ["__meta_docker_container_image"]
+            target_label: "image_name"
