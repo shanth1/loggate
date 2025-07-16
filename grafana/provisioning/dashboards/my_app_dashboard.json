@@ -1,4 +1,24 @@
 {
+	"__requires": [
+		{
+			"type": "grafana",
+			"id": "grafana",
+			"name": "Grafana",
+			"version": "10.1.1"
+		},
+		{
+			"type": "datasource",
+			"id": "prometheus",
+			"name": "Prometheus",
+			"version": "1.0.0"
+		},
+		{
+			"type": "datasource",
+			"id": "loki",
+			"name": "Loki",
+			"version": "1.0.0"
+		}
+	],
 	"annotations": {
 		"list": [
 			{
@@ -18,77 +38,403 @@
 	"editable": true,
 	"fiscalYearStartMonth": 0,
 	"graphTooltip": 0,
+	"id": null,
 	"links": [],
 	"liveNow": false,
 	"panels": [
+		{
+			"gridPos": {
+				"h": 2,
+				"w": 24,
+				"x": 0,
+				"y": 0
+			},
+			"id": 16,
+			"options": {
+				"content": "## LogGate Application Dashboard\n*   **Фильтруйте** данные с помощью переменных вверху экрана.\n*   **Исследуйте** метрики производительности и логи приложения.",
+				"mode": "markdown"
+			},
+			"pluginVersion": "10.1.1",
+			"title": "Информация",
+			"type": "text"
+		},
+		{
+			"collapsed": false,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 2
+			},
+			"id": 12,
+			"panels": [],
+			"title": "Key Metrics & Performance",
+			"type": "row"
+		},
+		{
+			"datasource": {
+				"type": "loki",
+				"uid": "Loki"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 6,
+				"x": 0,
+				"y": 3
+			},
+			"id": 2,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["lastNotNull"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "loki",
+						"uid": "Loki"
+					},
+					"expr": "sum(rate({job=\"docker_logs\", service_name=~\"$service\"}[1m]))",
+					"refId": "A"
+				}
+			],
+			"title": "Total Log Rate (lines/sec)",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "loki",
+				"uid": "Loki"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 6,
+				"x": 6,
+				"y": 3
+			},
+			"id": 6,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["lastNotNull"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "loki",
+						"uid": "Loki"
+					},
+					"expr": "sum(rate({job=\"docker_logs\", service_name=~\"$service\"} |~ `(?i)error|crit|fatal` [1m]))",
+					"refId": "A"
+				}
+			],
+			"title": "Error Rate (errors/sec)",
+			"type": "stat"
+		},
 		{
 			"datasource": {
 				"type": "prometheus",
 				"uid": "Prometheus"
 			},
-			"fieldConfig": {},
-			"gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-			"id": 1,
-			"options": {},
+			"gridPos": {
+				"h": 8,
+				"w": 6,
+				"x": 12,
+				"y": 3
+			},
+			"id": 10,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["lastNotNull"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
 			"targets": [
 				{
-					"datasource": { "type": "prometheus", "uid": "Prometheus" },
-					"expr": "sum(rate(loggate_udp_packets_received_total[1m])) by (job)",
-					"legendFormat": "{{job}} UDP packets/sec"
+					"datasource": {
+						"type": "prometheus",
+						"uid": "Prometheus"
+					},
+					"expr": "go_goroutines{job=\"loggate\"}",
+					"refId": "A"
 				}
 			],
-			"title": "Loggate UDP Packets Received",
+			"title": "Loggate Goroutines",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "prometheus",
+				"uid": "Prometheus"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					},
+					"unit": "bytes"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 6,
+				"x": 18,
+				"y": 3
+			},
+			"id": 8,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["lastNotNull"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "prometheus",
+						"uid": "Prometheus"
+					},
+					"expr": "go_memstats_alloc_bytes{job=\"loggate\"}",
+					"refId": "A"
+				}
+			],
+			"title": "Loggate Memory (Alloc)",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "loki",
+				"uid": "Loki"
+			},
+			"gridPos": {
+				"h": 10,
+				"w": 24,
+				"x": 0,
+				"y": 11
+			},
+			"id": 4,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "loki",
+						"uid": "Loki"
+					},
+					"expr": "sum by (level) (count_over_time({job=\"docker_logs\", service_name=~\"$service\"} |~ \"$level_filter\" [$__interval]))",
+					"legendFormat": "{{level}}",
+					"refId": "A"
+				}
+			],
+			"title": "Log Volume by Level",
 			"type": "timeseries"
 		},
 		{
-			"datasource": {
-				"type": "loki",
-				"uid": "Loki"
+			"collapsed": false,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 21
 			},
-			"gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-			"id": 2,
-			"options": {},
-			"targets": [
-				{
-					"datasource": { "type": "loki", "uid": "Loki" },
-					"expr": "{job=\"loggate_forwarded\"}"
-				}
-			],
-			"title": "Forwarded Application Logs (from Loggate)",
-			"type": "logs"
+			"id": 14,
+			"panels": [],
+			"title": "Live Logs",
+			"type": "row"
 		},
 		{
 			"datasource": {
 				"type": "loki",
 				"uid": "Loki"
 			},
-			"gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-			"id": 3,
-			"options": {},
+			"gridPos": {
+				"h": 16,
+				"w": 24,
+				"x": 0,
+				"y": 22
+			},
+			"id": 1,
+			"options": {
+				"dedupStrategy": "none",
+				"enableLogDetails": true,
+				"prettifyLogMessage": false,
+				"showCommonLabels": false,
+				"showLabels": true,
+				"showTime": true,
+				"sortOrder": "Descending",
+				"wrapLogMessage": true
+			},
+			"pluginVersion": "10.1.1",
 			"targets": [
 				{
-					"datasource": { "type": "loki", "uid": "Loki" },
-					"expr": "{job=\"loggate_stdout\"}"
+					"datasource": {
+						"type": "loki",
+						"uid": "Loki"
+					},
+					"expr": "{job=\"docker_logs\", service_name=~\"$service\"} |~ \"$level_filter\"",
+					"refId": "A"
 				}
 			],
-			"title": "Loggate Internal Logs",
+			"title": "Logs",
 			"type": "logs"
 		}
 	],
-	"refresh": "",
+	"refresh": "5s",
 	"schemaVersion": 38,
-	"tags": [],
+	"style": "dark",
+	"tags": ["loggate", "provisioned"],
 	"templating": {
-		"list": []
+		"list": [
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "loki",
+					"uid": "Loki"
+				},
+				"definition": "label_values(service_name)",
+				"hide": 0,
+				"includeAll": true,
+				"multi": true,
+				"name": "service",
+				"options": [],
+				"query": "label_values(service_name)",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 1,
+				"type": "query"
+			},
+			{
+				"current": {
+					"selected": true,
+					"text": ["info", "warn", "error"],
+					"value": ["info", "warn", "error"]
+				},
+				"hide": 0,
+				"includeAll": true,
+				"multi": true,
+				"name": "level",
+				"options": [
+					{
+						"selected": true,
+						"text": "info",
+						"value": "info"
+					},
+					{
+						"selected": true,
+						"text": "warn",
+						"value": "warn"
+					},
+					{
+						"selected": true,
+						"text": "error",
+						"value": "error"
+					},
+					{
+						"selected": false,
+						"text": "debug",
+						"value": "debug"
+					},
+					{
+						"selected": false,
+						"text": "trace",
+						"value": "trace"
+					}
+				],
+				"query": "info,warn,error,debug,trace",
+				"queryValue": "",
+				"skipUrlSync": false,
+				"type": "custom"
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "(?i)info|warn|error",
+					"value": "(?i)info|warn|error"
+				},
+				"hide": 2,
+				"name": "level_filter",
+				"options": [
+					{
+						"selected": false,
+						"text": "nevermind",
+						"value": "nevermind"
+					}
+				],
+				"query": "${level:regex}",
+				"skipUrlSync": false,
+				"type": "custom"
+			}
+		]
 	},
 	"time": {
 		"from": "now-1h",
 		"to": "now"
 	},
 	"timepicker": {},
-	"timezone": "",
-	"title": "Loggate Overview",
-	"uid": "990d4cfd-ba5c-487d-a7c3-93444b91007a",
-	"version": 1,
+	"timezone": "browser",
+	"title": "LogGate Application",
+	"uid": "loggate-app-dashboard",
+	"version": 4,
 	"weekStart": ""
 }

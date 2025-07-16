@@ -19,6 +19,6 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 10514/udp
-EXPOSE 9091
+EXPOSE 9100
 
 CMD ["/app/loggate_server"]
