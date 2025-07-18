@@ -425,7 +425,7 @@
 						"uid": "Loki"
 					},
 					"editorMode": "code",
-					"expr": "{docker_service=~\"$docker_service\", service=~\"$service\", level=~\"$level\"}",
+					"expr": "{docker_service=~\"$docker_service\", service=~\"$service\", level=~\"$level\"} |= \"$log_query\"",
 					"queryType": "range",
 					"refId": "A"
 				}
@@ -442,9 +442,40 @@
 		"list": [
 			{
 				"current": {
-					"selected": true,
-					"text": ["auth-service"],
-					"value": ["auth-service"]
+					"text": "",
+					"value": ""
+				},
+				"hide": 0,
+				"label": "Log Search (by message content, case-insensitive)",
+				"name": "log_query",
+				"options": [],
+				"query": "",
+				"skipUrlSync": false,
+				"type": "textbox"
+			},
+			{
+				"name": "linebreak",
+				"type": "custom",
+				"options": [
+					{
+						"text": " ",
+						"value": " "
+					}
+				],
+				"hide": 2,
+				"label": " ",
+				"current": {
+					"text": " ",
+					"value": " "
+				},
+				"query": " ",
+				"skipUrlSync": true
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
 				},
 				"datasource": {
 					"type": "loki",
@@ -457,8 +488,8 @@
 				"name": "service",
 				"options": [],
 				"query": {
-					"label": "service",
-					"refId": "Loki-service-Variable-Query"
+					"refId": "Loki-service-Variable-Query",
+					"label": "service"
 				},
 				"refresh": 2,
 				"regex": "",
@@ -468,9 +499,9 @@
 			},
 			{
 				"current": {
-					"selected": true,
-					"text": ["All"],
-					"value": ["$__all"]
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
 				},
 				"datasource": {
 					"type": "loki",
@@ -484,8 +515,8 @@
 				"name": "docker_service",
 				"options": [],
 				"query": {
-					"label": "docker_service",
-					"refId": "Loki-docker_service-Variable-Query"
+					"refId": "Loki-docker_service-Variable-Query",
+					"label": "docker_service"
 				},
 				"refresh": 2,
 				"regex": "",
@@ -496,8 +527,8 @@
 			{
 				"current": {
 					"selected": true,
-					"text": ["trace"],
-					"value": ["trace"]
+					"text": ["info", "warn", "error"],
+					"value": ["info", "warn", "error"]
 				},
 				"hide": 0,
 				"includeAll": true,
@@ -505,17 +536,17 @@
 				"name": "level",
 				"options": [
 					{
-						"selected": false,
+						"selected": true,
 						"text": "info",
 						"value": "info"
 					},
 					{
-						"selected": false,
+						"selected": true,
 						"text": "warn",
 						"value": "warn"
 					},
 					{
-						"selected": false,
+						"selected": true,
 						"text": "error",
 						"value": "error"
 					},
@@ -525,29 +556,13 @@
 						"value": "debug"
 					},
 					{
-						"selected": true,
+						"selected": false,
 						"text": "trace",
 						"value": "trace"
 					}
 				],
 				"query": "info,warn,error,debug,trace",
 				"queryValue": "",
-				"skipUrlSync": false,
-				"type": "custom"
-			},
-			{
-				"current": {
-					"selected": false,
-					"text": "info|warn|error",
-					"value": "info|warn|error"
-				},
-				"definition": "${level:regex}",
-				"hide": 2,
-				"includeAll": false,
-				"multi": false,
-				"name": "level_filter",
-				"options": [],
-				"query": "${level:regex}",
 				"skipUrlSync": false,
 				"type": "custom"
 			}
