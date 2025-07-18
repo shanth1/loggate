@@ -374,7 +374,7 @@
 						"type": "loki",
 						"uid": "Loki"
 					},
-					"expr": "sum by (level) (count_over_time({docker_service=~\"$docker_service\", service=~\"$service\", level=~\"$level_filter\"} [$__interval]))",
+					"expr": "sum by (level) (count_over_time({docker_service=~\"$docker_service\", service=~\"$service\", level=~\"$level\"} [$__interval]))",
 					"legendFormat": "{{level}}",
 					"refId": "A"
 				}
