@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
 	"os/signal"
 	"syscall"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shanth1/loggate/internal/adapters/input/udp"
 	"github.com/shanth1/loggate/internal/adapters/output/console"
 	"github.com/shanth1/loggate/internal/common"
@@ -20,6 +23,14 @@ func main() {
 
 	// --- Сonfig ---
 	cfg := config.MustGetConfig()
+
+	go func() {
+		log.Printf("Starting metrics server on %s", cfg.Server.MetricsAddress)
+		http.Handle("/metrics", promhttp.Handler())
+		if err := http.ListenAndServe(cfg.Server.MetricsAddress, nil); err != nil {
+			log.Fatalf("failed to start metrics server: %v", err)
+		}
+	}()
 
 	logger := common.GetLogger()
 	ctx = logger.WithContext(ctx)
