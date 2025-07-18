@@ -29,6 +29,9 @@ scrape_configs:
                 expressions:
                     level: level
                     service: service
+          - timestamp:
+                source: timestamp
+                format: RFC3339Nano
           - labels:
                 level:
                 service:
