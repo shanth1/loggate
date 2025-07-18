@@ -1,24 +1,4 @@
 {
-	"__requires": [
-		{
-			"type": "grafana",
-			"id": "grafana",
-			"name": "Grafana",
-			"version": "10.1.1"
-		},
-		{
-			"type": "datasource",
-			"id": "prometheus",
-			"name": "Prometheus",
-			"version": "1.0.0"
-		},
-		{
-			"type": "datasource",
-			"id": "loki",
-			"name": "Loki",
-			"version": "1.0.0"
-		}
-	],
 	"annotations": {
 		"list": [
 			{
@@ -38,24 +18,29 @@
 	"editable": true,
 	"fiscalYearStartMonth": 0,
 	"graphTooltip": 0,
-	"id": null,
 	"links": [],
 	"liveNow": false,
 	"panels": [
 		{
+			"description": "",
 			"gridPos": {
-				"h": 2,
+				"h": 3,
 				"w": 24,
 				"x": 0,
 				"y": 0
 			},
 			"id": 16,
 			"options": {
-				"content": "## LogGate Application Dashboard\n*   **Фильтруйте** данные с помощью переменных вверху экрана.\n*   **Исследуйте** метрики производительности и логи приложения.",
+				"code": {
+					"language": "plaintext",
+					"showLineNumbers": false,
+					"showMiniMap": false
+				},
+				"content": "## LogGate Application Dashboard",
 				"mode": "markdown"
 			},
 			"pluginVersion": "10.1.1",
-			"title": "Информация",
+			"title": "Information",
 			"type": "text"
 		},
 		{
@@ -64,7 +49,7 @@
 				"h": 1,
 				"w": 24,
 				"x": 0,
-				"y": 2
+				"y": 3
 			},
 			"id": 12,
 			"panels": [],
@@ -76,11 +61,30 @@
 				"type": "loki",
 				"uid": "Loki"
 			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
 			"gridPos": {
 				"h": 8,
 				"w": 6,
 				"x": 0,
-				"y": 3
+				"y": 4
 			},
 			"id": 2,
 			"options": {
@@ -102,7 +106,7 @@
 						"type": "loki",
 						"uid": "Loki"
 					},
-					"expr": "sum(rate({job=\"docker_logs\", service_name=~\"$service\"}[1m]))",
+					"expr": "sum(rate({docker_service=~\"$docker_service\", service=~\"$service\"}[1m]))",
 					"refId": "A"
 				}
 			],
@@ -112,13 +116,32 @@
 		{
 			"datasource": {
 				"type": "loki",
-				"uid": "Loki"
+				"uid": "P8E80F9AEF21F6940"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
 			},
 			"gridPos": {
 				"h": 8,
 				"w": 6,
 				"x": 6,
-				"y": 3
+				"y": 4
 			},
 			"id": 6,
 			"options": {
@@ -140,7 +163,9 @@
 						"type": "loki",
 						"uid": "Loki"
 					},
-					"expr": "sum(rate({job=\"docker_logs\", service_name=~\"$service\"} |~ `(?i)error|crit|fatal` [1m]))",
+					"editorMode": "code",
+					"expr": "sum(rate({docker_service=~\"$docker_service\", service=~\"$service\", level=~\"error|crit|fatal\"}[1m]))",
+					"queryType": "range",
 					"refId": "A"
 				}
 			],
@@ -152,11 +177,30 @@
 				"type": "prometheus",
 				"uid": "Prometheus"
 			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
 			"gridPos": {
 				"h": 8,
 				"w": 6,
 				"x": 12,
-				"y": 3
+				"y": 4
 			},
 			"id": 10,
 			"options": {
@@ -217,7 +261,7 @@
 				"h": 8,
 				"w": 6,
 				"x": 18,
-				"y": 3
+				"y": 4
 			},
 			"id": 8,
 			"options": {
@@ -251,11 +295,64 @@
 				"type": "loki",
 				"uid": "Loki"
 			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "line",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"insertNulls": false,
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
 			"gridPos": {
 				"h": 10,
 				"w": 24,
 				"x": 0,
-				"y": 11
+				"y": 12
 			},
 			"id": 4,
 			"options": {
@@ -277,7 +374,7 @@
 						"type": "loki",
 						"uid": "Loki"
 					},
-					"expr": "sum by (level) (count_over_time({job=\"docker_logs\", service_name=~\"$service\"} |~ \"$level_filter\" [$__interval]))",
+					"expr": "sum by (level) (count_over_time({docker_service=~\"$docker_service\", service=~\"$service\", level=~\"$level_filter\"} [$__interval]))",
 					"legendFormat": "{{level}}",
 					"refId": "A"
 				}
@@ -291,7 +388,7 @@
 				"h": 1,
 				"w": 24,
 				"x": 0,
-				"y": 21
+				"y": 22
 			},
 			"id": 14,
 			"panels": [],
@@ -301,13 +398,13 @@
 		{
 			"datasource": {
 				"type": "loki",
-				"uid": "Loki"
+				"uid": "P8E80F9AEF21F6940"
 			},
 			"gridPos": {
 				"h": 16,
 				"w": 24,
 				"x": 0,
-				"y": 22
+				"y": 23
 			},
 			"id": 1,
 			"options": {
@@ -327,7 +424,9 @@
 						"type": "loki",
 						"uid": "Loki"
 					},
-					"expr": "{job=\"docker_logs\", service_name=~\"$service\"} |~ \"$level_filter\"",
+					"editorMode": "code",
+					"expr": "{docker_service=~\"$docker_service\", service=~\"$service\", level=~\"$level\"}",
+					"queryType": "range",
 					"refId": "A"
 				}
 			],
@@ -343,21 +442,24 @@
 		"list": [
 			{
 				"current": {
-					"selected": false,
-					"text": "All",
-					"value": "$__all"
+					"selected": true,
+					"text": ["auth-service"],
+					"value": ["auth-service"]
 				},
 				"datasource": {
 					"type": "loki",
 					"uid": "Loki"
 				},
-				"definition": "label_values(service_name)",
+				"definition": "label_values(service)",
 				"hide": 0,
 				"includeAll": true,
 				"multi": true,
 				"name": "service",
 				"options": [],
-				"query": "label_values(service_name)",
+				"query": {
+					"label": "service",
+					"refId": "Loki-service-Variable-Query"
+				},
 				"refresh": 2,
 				"regex": "",
 				"skipUrlSync": false,
@@ -367,8 +469,35 @@
 			{
 				"current": {
 					"selected": true,
-					"text": ["info", "warn", "error"],
-					"value": ["info", "warn", "error"]
+					"text": ["All"],
+					"value": ["$__all"]
+				},
+				"datasource": {
+					"type": "loki",
+					"uid": "Loki"
+				},
+				"definition": "label_values(docker_service)",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Docker Service",
+				"multi": true,
+				"name": "docker_service",
+				"options": [],
+				"query": {
+					"label": "docker_service",
+					"refId": "Loki-docker_service-Variable-Query"
+				},
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 1,
+				"type": "query"
+			},
+			{
+				"current": {
+					"selected": true,
+					"text": ["trace"],
+					"value": ["trace"]
 				},
 				"hide": 0,
 				"includeAll": true,
@@ -376,17 +505,17 @@
 				"name": "level",
 				"options": [
 					{
-						"selected": true,
+						"selected": false,
 						"text": "info",
 						"value": "info"
 					},
 					{
-						"selected": true,
+						"selected": false,
 						"text": "warn",
 						"value": "warn"
 					},
 					{
-						"selected": true,
+						"selected": false,
 						"text": "error",
 						"value": "error"
 					},
@@ -396,7 +525,7 @@
 						"value": "debug"
 					},
 					{
-						"selected": false,
+						"selected": true,
 						"text": "trace",
 						"value": "trace"
 					}
@@ -409,18 +538,15 @@
 			{
 				"current": {
 					"selected": false,
-					"text": "(?i)info|warn|error",
-					"value": "(?i)info|warn|error"
+					"text": "info|warn|error",
+					"value": "info|warn|error"
 				},
+				"definition": "${level:regex}",
 				"hide": 2,
+				"includeAll": false,
+				"multi": false,
 				"name": "level_filter",
-				"options": [
-					{
-						"selected": false,
-						"text": "nevermind",
-						"value": "nevermind"
-					}
-				],
+				"options": [],
 				"query": "${level:regex}",
 				"skipUrlSync": false,
 				"type": "custom"
@@ -428,13 +554,13 @@
 		]
 	},
 	"time": {
-		"from": "now-1h",
+		"from": "now-5m",
 		"to": "now"
 	},
 	"timepicker": {},
 	"timezone": "browser",
 	"title": "LogGate Application",
 	"uid": "loggate-app-dashboard",
-	"version": 4,
+	"version": 3,
 	"weekStart": ""
 }

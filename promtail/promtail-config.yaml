@@ -20,6 +20,15 @@ scrape_configs:
             target_label: "container_name"
           - source_labels:
                 ["__meta_docker_container_label_com_docker_compose_service"]
-            target_label: "service_name"
+            target_label: "docker_service"
+
           - source_labels: ["__meta_docker_container_image"]
             target_label: "image_name"
+      pipeline_stages:
+          - json:
+                expressions:
+                    level: level
+                    service: service
+          - labels:
+                level:
+                service:
