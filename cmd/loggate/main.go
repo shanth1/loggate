@@ -27,6 +27,7 @@ func main() {
 
 	// --- Output/Driven Adapters ---
 
+	// TODO: refactor:
 	storages := make(map[string]ports.LogStorage)
 
 	for storageName, storageCfg := range cfg.Storages {
@@ -53,26 +54,27 @@ func main() {
 
 	// --- Core ---
 	logService := service.NewLogService(storages, cfg.RoutingRules, cfg.DefaultDestinations)
-	logService.Start(ctx)
 
 	// --- Input/Driver Adapter ---
+	infoServer := server.New(cfg.Server.InfoAddress)
+
 	udpListener, err := udp.New(cfg.Server.LogAddress, logService)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("new udp adapter")
 	}
 
-	server := server.New(cfg.Server.InfoAddress)
+	// --- Start ---
+
+	go logService.Start(ctx)
 
 	go udpListener.Start(ctx)
-	go server.Start(ctx)
+	go infoServer.Start(ctx)
 
 	// --- Graceful Shutdown ---
 
 	<-ctx.Done()
 
 	logger.Info().Msg("shutting down server...")
-
-	logService.Shutdown(ctx)
 
 	for _, s := range storages {
 		if err := s.Close(); err != nil {

@@ -50,11 +50,6 @@ func (s *LogService) Start(ctx context.Context) {
 		go s.runWorker(ctx, name, storage, s.destinationChannels[name])
 	}
 	logger.Info().Msg("log service workers started")
-}
-
-func (s *LogService) Shutdown(ctx context.Context) {
-	logger := log.FromCtx(ctx)
-	logger.Info().Msg("waiting for log service workers to stop...")
 
 	s.wg.Wait()
 
