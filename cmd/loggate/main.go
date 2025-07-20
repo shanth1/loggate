@@ -56,12 +56,12 @@ func main() {
 	logService.Start(ctx)
 
 	// --- Input/Driver Adapter ---
-	udpListener, err := udp.New(cfg.Server.ListenAddress, logService)
+	udpListener, err := udp.New(cfg.Server.LogAddress, logService)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("new udp adapter")
 	}
 
-	server := server.New(cfg.Server.MetricsAddress)
+	server := server.New(cfg.Server.InfoAddress)
 
 	go udpListener.Start(ctx)
 	go server.Start(ctx)

@@ -23,8 +23,8 @@ type Config struct {
 }
 
 type Server struct {
-	ListenAddress  string `mapstructure:"listen_address"`
-	MetricsAddress string `mapstructure:"metrics_address"`
+	LogAddress  string `mapstructure:"log_address"`
+	InfoAddress string `mapstructure:"info_address"`
 }
 
 type Storage struct {

@@ -10,12 +10,12 @@ import (
 )
 
 type server struct {
-	metricsAddr string
+	infoAddr string
 }
 
-func New(metricsAddr string) *server {
+func New(infoAddr string) *server {
 	return &server{
-		metricsAddr,
+		infoAddr,
 	}
 }
 
@@ -23,7 +23,7 @@ func (s *server) Start(ctx context.Context) {
 	logger := log.FromCtx(ctx)
 
 	http.Handle("/metrics", promhttp.Handler())
-	if err := http.ListenAndServe(s.metricsAddr, nil); err != nil {
+	if err := http.ListenAndServe(s.infoAddr, nil); err != nil {
 		logger.Fatal().Msg(fmt.Sprintf("failed to start metrics server: %v", err))
 	}
 }
