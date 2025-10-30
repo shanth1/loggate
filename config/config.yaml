@@ -1,0 +1,25 @@
+server:
+    log_address: ":10514"
+    info_address: ":9100"
+
+storages:
+    console_debug:
+        type: "console"
+        enabled: true
+
+    clickhouse_main:
+        type: "clickhouse"
+        enabled: false
+        dsn: "clickhouse://<user>:<password>@<host>:<port>/<database>?[params]"
+
+routing_rules:
+    - match_condition:
+          service: "auth-service"
+          level: "INFO"
+      destinations: ["console_debug"]
+
+    - match_condition:
+          service: "payment-gateway"
+      destinations: ["clickhouse_main"]
+
+default_destinations: ["console_debug"]

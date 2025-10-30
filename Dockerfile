@@ -1,0 +1,24 @@
+FROM golang:1.23-alpine AS builder
+
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-w -s" -o /app/loggate_server ./cmd/loggate
+
+FROM alpine:latest
+
+RUN addgroup -S appuser && adduser -S appuser -G appuser
+
+WORKDIR /app
+COPY --from=builder /app/loggate_server /app/loggate_server
+
+RUN chown -R appuser:appuser /app
+
+USER appuser
+
+EXPOSE 10514/udp
+EXPOSE 9100
+
+CMD ["/app/loggate_server"]

@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+    - name: "loggate-service-dashboards"
+      orgId: 1
+      folder: "LogGate Service"
+      type: file
+      disableDeletion: false
+      editable: true
+      options:
+          path: /etc/grafana/provisioning/dashboards

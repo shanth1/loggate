@@ -1,0 +1,54 @@
+target: "localhost:10514"
+
+load:
+    workers: 5
+    rps: 10 # for worker
+    jitter: 50ms
+
+templates:
+    - service: "auth-service"
+      levels:
+          INFO: 0.7
+          WARN: 0.25
+          ERROR: 0.05
+      messages:
+          INFO:
+              - "User {name} logged in successfully from IP {ipv4address}"
+              - "Password reset requested for user {username}"
+          WARN:
+              - "Failed login attempt for user {username}"
+          ERROR:
+              - "Failed to connect to LDAP server"
+              - "User account {username} locked due to too many failed attempts"
+      fields:
+          - key: "trace_id"
+            type: "uuid"
+          - key: "user_agent"
+            type: "useragent"
+
+    - service: "payment-gateway"
+      levels:
+          INFO: 0.9
+          ERROR: 0.1
+      messages:
+          INFO:
+              - "Transaction {creditcardnumber} for amount {price:10,500} processed"
+              - "Payment received from {email}"
+          ERROR:
+              - "Transaction failed: Insufficient funds"
+              - "Credit card {creditcardnumber} expired"
+      fields:
+          - key: "transaction_id"
+            type: "uuid"
+          - key: "amount_usd"
+            type: "float:10,500"
+
+    - service: "inventory-service"
+      levels:
+          INFO: 1.0
+      messages:
+          INFO:
+              - "Stock updated for product SKU {productsku}. New count: {number:1,1000}"
+      fields:
+          - key: "product_id"
+            type: "number:10000,20000"
