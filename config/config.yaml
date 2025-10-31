@@ -25,6 +25,6 @@ routing_rules:
 
   - match_condition:
       service: 'payment-gateway'
-    destinations: ['clickhouse_main']
+    destinations: ['console_debug']
 
 default_destinations: ['console_debug']
