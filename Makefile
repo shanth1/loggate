@@ -11,7 +11,7 @@ help:
 	@echo "  status         - Show the status of all services."
 	@echo ""
 	@echo "Data & Configuration:"
-	@echo "  backup         - Create a cold backup of Loki data into a .tar.gz file."
+	@echo "  backup         - Create a cold backup of Loki data by running the backup script."
 	@echo "  clean          - Stop services and REMOVE ALL DATA (volumes). Use with caution."
 	@echo "  config-dev     - Print instructions for setting up the .env file for development."
 	@echo "  config-prod    - Print instructions for setting up the .env file for production."
@@ -50,17 +50,7 @@ status:
 # --- Data & Configuration ---
 
 backup:
-	@echo "Creating Loki data backup..."
-	@LOKI_VOLUME=$$(docker volume inspect loggate_loki_data -f '{{.Mountpoint}}')
-	@if [ -z "$$LOKI_VOLUME" ]; then echo "Loki data volume not found!"; exit 1; fi
-	@BACKUP_FILE="loki-backup-$$(date +%Y-%m-%d_%H-%M-%S).tar.gz"
-	@echo "Stopping Loki to ensure data consistency..."
-	@docker-compose stop loki promtail
-	@echo "Creating archive $$BACKUP_FILE from $$LOKI_VOLUME..."
-	@tar -czvf "$$BACKUP_FILE" -C "$$LOKI_VOLUME" .
-	@echo "Starting Loki back up..."
-	@docker-compose start loki promtail
-	@echo "Backup complete: $$BACKUP_FILE"
+	@./scripts/backup.sh
 
 clean:
 	@echo "WARNING: This will permanently delete all logs, metrics, and dashboards."
