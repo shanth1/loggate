@@ -1,37 +1,39 @@
 server:
-    http_listen_port: 9080
-    grpc_listen_port: 0
+  http_listen_port: 9080
+  grpc_listen_port: 0
 
 positions:
-    filename: /tmp/positions/positions.yaml
+  filename: /tmp/positions/positions.yaml
 
 clients:
-    - url: http://loki:3100/loki/api/v1/push
+  - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-    - job_name: docker_logs
-      docker_sd_configs:
-          - host: unix:///var/run/docker.sock
-            refresh_interval: 5s
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        filters:
+          - name: name
+            values: ['loggate-service']
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'container'
 
-      relabel_configs:
-          - source_labels: ["__meta_docker_container_name"]
-            regex: "/(.*)"
-            target_label: "container_name"
-          - source_labels:
-                ["__meta_docker_container_label_com_docker_compose_service"]
-            target_label: "docker_service"
-
-          - source_labels: ["__meta_docker_container_image"]
-            target_label: "image_name"
-      pipeline_stages:
-          - json:
-                expressions:
-                    level: level
-                    service: service
-          - timestamp:
-                source: timestamp
-                format: RFC3339Nano
-          - labels:
-                level:
-                service:
+    pipeline_stages:
+      - json:
+          expressions:
+            app: app
+            level: level
+            service: service
+            trace_id: fields.trace_id
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          app:
+          level:
+          service:
+      - output:
+          source: 'log'

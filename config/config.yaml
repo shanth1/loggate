@@ -1,25 +1,30 @@
 server:
-    log_address: ":10514"
-    info_address: ":9100"
+  log_address: ':10514'
+  info_address: ':9100'
+
+performance:
+  buffer_size: 1000
+  batch_size: 1000
+  batch_timeout_ms: 5000
 
 storages:
-    console_debug:
-        type: "console"
-        enabled: true
+  console_debug:
+    type: 'console'
+    enabled: true
 
-    clickhouse_main:
-        type: "clickhouse"
-        enabled: false
-        dsn: "clickhouse://<user>:<password>@<host>:<port>/<database>?[params]"
+  clickhouse_main:
+    type: 'clickhouse'
+    enabled: false
+    dsn: 'clickhouse://<user>:<password>@<host>:<port>/<database>?[params]'
 
 routing_rules:
-    - match_condition:
-          service: "auth-service"
-          level: "INFO"
-      destinations: ["console_debug"]
+  - match_condition:
+      service: 'auth-service'
+      level: 'INFO'
+    destinations: ['console_debug']
 
-    - match_condition:
-          service: "payment-gateway"
-      destinations: ["clickhouse_main"]
+  - match_condition:
+      service: 'payment-gateway'
+    destinations: ['clickhouse_main']
 
-default_destinations: ["console_debug"]
+default_destinations: ['console_debug']

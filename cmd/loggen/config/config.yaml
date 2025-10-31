@@ -1,54 +1,66 @@
-target: "localhost:10514"
+target: 'localhost:10514'
 
 load:
-    workers: 5
-    rps: 10 # for worker
-    jitter: 50ms
+  workers: 5
+  rps: 10
+  jitter: 50ms
 
 templates:
-    - service: "auth-service"
-      levels:
-          INFO: 0.7
-          WARN: 0.25
-          ERROR: 0.05
-      messages:
-          INFO:
-              - "User {name} logged in successfully from IP {ipv4address}"
-              - "Password reset requested for user {username}"
-          WARN:
-              - "Failed login attempt for user {username}"
-          ERROR:
-              - "Failed to connect to LDAP server"
-              - "User account {username} locked due to too many failed attempts"
-      fields:
-          - key: "trace_id"
-            type: "uuid"
-          - key: "user_agent"
-            type: "useragent"
+  - app: 'user-management'
+    service: 'auth-service'
+    levels:
+      info: 0.7
+      warn: 0.25
+      error: 0.05
+    messages:
+      info:
+        - 'User {name} logged in successfully from IP {ipv4address}'
+        - 'Password reset requested for user {username}'
+      warn:
+        - 'Failed login attempt for user {username}'
+      error:
+        - 'Failed to connect to LDAP server'
+        - 'User account {username} locked due to too many failed attempts'
+    fields:
+      - key: 'trace_id'
+        type: 'uuid'
+      - key: 'user_agent'
+        type: 'useragent'
 
-    - service: "payment-gateway"
-      levels:
-          INFO: 0.9
-          ERROR: 0.1
-      messages:
-          INFO:
-              - "Transaction {creditcardnumber} for amount {price:10,500} processed"
-              - "Payment received from {email}"
-          ERROR:
-              - "Transaction failed: Insufficient funds"
-              - "Credit card {creditcardnumber} expired"
-      fields:
-          - key: "transaction_id"
-            type: "uuid"
-          - key: "amount_usd"
-            type: "float:10,500"
+  - app: 'e-commerce'
+    service: 'payment-gateway'
+    levels:
+      info: 0.9
+      warn: 0.02
+      error: 0.08
+    messages:
+      info:
+        - 'Transaction {creditcardnumber} for amount {price:10,500} processed'
+        - 'Payment received from {email}'
+      warn:
+        - 'High-value transaction detected for user {email}. Awaiting manual approval.'
+      error:
+        - 'Transaction failed: Insufficient funds'
+        - 'Credit card {creditcardnumber} expired'
+    fields:
+      - key: 'transaction_id'
+        type: 'uuid'
+      - key: 'amount_usd'
+        type: 'float:10,500'
 
-    - service: "inventory-service"
-      levels:
-          INFO: 1.0
-      messages:
-          INFO:
-              - "Stock updated for product SKU {productsku}. New count: {number:1,1000}"
-      fields:
-          - key: "product_id"
-            type: "number:10000,20000"
+  - app: 'e-commerce'
+    service: 'inventory-service'
+    levels:
+      info: 0.8
+      warn: 0.05
+      error: 0.15
+    messages:
+      info:
+        - 'Stock updated for product SKU {productsku}. New count: {number:1,1000}'
+      warn:
+        - 'Stock for product SKU {productsku} is running low. Items left: {number:1,10}'
+      error:
+        - 'Failed to update stock for SKU {productsku}: Database timeout'
+    fields:
+      - key: 'product_id'
+        type: 'number:10000,20000'
