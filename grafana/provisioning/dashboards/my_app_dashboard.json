@@ -47,6 +47,7 @@
 				"mode": "markdown"
 			},
 			"title": "Information",
+			"transparent": true,
 			"type": "text"
 		},
 		{
@@ -58,10 +59,11 @@
 			},
 			"id": 20,
 			"options": {
-				"content": "#### Quick Actions\n\n<a href=\"/d/${__dashboard.uid}/?orgId=1&refresh=10s&var-log_query=&var-trace_id=&var-app=All&var-service=All&var-level=All\" class=\"btn btn-secondary\"> \n<i class=\"fa fa-undo\"></i>&nbsp; Reset All Filters\n</a>\n",
+				"content": "<div style=\"padding-top: 10px; text-align: right;\">\n  <h4>Quick Actions</h4>\n  <a href=\"/d/${__dashboard.uid}/?orgId=1&refresh=10s&var-log_query=&var-trace_id=&var-app=All&var-service=All&var-level=All\" class=\"btn btn-secondary\">\n    <i class=\"fa fa-undo\"></i>&nbsp; Reset All Filters\n  </a>\n</div>\n",
 				"mode": "html"
 			},
-			"title": "Actions",
+			"title": "",
+			"transparent": true,
 			"type": "text"
 		},
 		{
@@ -641,6 +643,6 @@
 	"timezone": "browser",
 	"title": "LogGate Application",
 	"uid": "loggate-app-dashboard",
-	"version": 15,
+	"version": 16,
 	"weekStart": ""
 }
