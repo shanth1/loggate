@@ -22,17 +22,46 @@
 	"liveNow": false,
 	"panels": [
 		{
+			"collapsed": false,
 			"gridPos": {
-				"h": 7,
+				"h": 1,
 				"w": 24,
 				"x": 0,
 				"y": 0
 			},
+			"id": 22,
+			"panels": [],
+			"title": "Controls & Information",
+			"type": "row"
+		},
+		{
+			"gridPos": {
+				"h": 8,
+				"w": 18,
+				"x": 0,
+				"y": 1
+			},
 			"id": 16,
 			"options": {
-				"content": "## LogGate Application Dashboard\n\nThis dashboard provides a comprehensive overview of the logs processed by the LogGate service.\n\n**How to search logs:**\n- **Fast Filters:** Use the `Application`, `Service`, and `Level` dropdowns for high-performance filtering based on indexed labels.\n- **Content Search (Case-Insensitive):** Use the `Log Search` field to find text anywhere within the log message. Example: `failed login` or an IP address `192.168.1.1`.\n- **Trace ID Search:** Use the `Trace ID` field to find all logs matching a specific trace identifier.",
+				"content": "### LogGate Application Dashboard\nThis dashboard provides a comprehensive overview of the logs processed by the LogGate service.\n\n**How to search logs:**\n- **Fast Filters:** Use the `Application`, `Service`, and `Level` dropdowns for high-performance filtering based on indexed labels.\n- **Content Search (Case-Insensitive):** Use the `Log Search` field to find text anywhere within the log message. Example: `failed login` or an IP address `192.168.1.1`.\n- **Trace ID Search:** Use the `Trace ID` field to find all logs matching a specific trace identifier.",
 				"mode": "markdown"
 			},
+			"title": "Information",
+			"type": "text"
+		},
+		{
+			"gridPos": {
+				"h": 8,
+				"w": 6,
+				"x": 18,
+				"y": 1
+			},
+			"id": 20,
+			"options": {
+				"content": "#### Quick Actions\n\n<a href=\"/d/${__dashboard.uid}/?orgId=1&refresh=10s&var-log_query=&var-trace_id=&var-app=All&var-service=All&var-level=All\" class=\"btn btn-secondary\"> \n<i class=\"fa fa-undo\"></i>&nbsp; Reset All Filters\n</a>\n",
+				"mode": "html"
+			},
+			"title": "Actions",
 			"type": "text"
 		},
 		{
@@ -41,7 +70,7 @@
 				"h": 1,
 				"w": 24,
 				"x": 0,
-				"y": 7
+				"y": 9
 			},
 			"id": 12,
 			"panels": [],
@@ -57,7 +86,7 @@
 				"h": 8,
 				"w": 6,
 				"x": 0,
-				"y": 8
+				"y": 10
 			},
 			"id": 2,
 			"options": {
@@ -96,7 +125,7 @@
 				"h": 8,
 				"w": 6,
 				"x": 6,
-				"y": 8
+				"y": 10
 			},
 			"id": 6,
 			"options": {
@@ -136,7 +165,7 @@
 				"h": 8,
 				"w": 6,
 				"x": 12,
-				"y": 8
+				"y": 10
 			},
 			"id": 10,
 			"options": {
@@ -201,7 +230,7 @@
 				"h": 8,
 				"w": 6,
 				"x": 18,
-				"y": 8
+				"y": 10
 			},
 			"id": 8,
 			"options": {
@@ -292,7 +321,7 @@
 				"h": 9,
 				"w": 12,
 				"x": 0,
-				"y": 16
+				"y": 18
 			},
 			"id": 4,
 			"options": {
@@ -331,7 +360,7 @@
 				"h": 9,
 				"w": 12,
 				"x": 12,
-				"y": 16
+				"y": 18
 			},
 			"id": 17,
 			"options": {
@@ -372,7 +401,7 @@
 				"h": 1,
 				"w": 24,
 				"x": 0,
-				"y": 25
+				"y": 27
 			},
 			"id": 14,
 			"panels": [],
@@ -388,7 +417,7 @@
 				"h": 10,
 				"w": 24,
 				"x": 0,
-				"y": 26
+				"y": 28
 			},
 			"id": 18,
 			"options": {
@@ -456,7 +485,7 @@
 				"h": 14,
 				"w": 24,
 				"x": 0,
-				"y": 36
+				"y": 38
 			},
 			"id": 1,
 			"options": {
@@ -477,7 +506,7 @@
 						"uid": "Loki"
 					},
 					"editorMode": "code",
-					"expr": "{app=~\"$app\", service=~\"$service\", level=~\"$level\"} | json |~ `(?i)${log_query}` |= `${trace_id}`",
+					"expr": "{app=~\"$app\", service=~\"$service\", level=~\"$level\"} |~ `(?i)${log_query}` |= `${trace_id}` | json",
 					"queryType": "range",
 					"refId": "A"
 				}
@@ -612,6 +641,6 @@
 	"timezone": "browser",
 	"title": "LogGate Application",
 	"uid": "loggate-app-dashboard",
-	"version": 13,
+	"version": 15,
 	"weekStart": ""
 }
