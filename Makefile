@@ -1,17 +1,18 @@
-.PHONY: help up down restart logs status shell backup clean destroy test-log gen-logs change-password config-dev config-prod
+.PHONY: help up down build restart logs status shell backup clean destroy test-log gen-logs change-password config-dev config-prod
 
 help:
 	@echo "Usage: make [target]"
 	@echo ""
 	@echo "Service Management:"
-	@echo "  up             - Build and start all services in detached mode. Creates .env if missing."
+	@echo "  up             - Start all services in detached mode. Creates .env if missing."
 	@echo "  down           - Stop and remove all service containers."
+	@echo "  build          - Force rebuild of the loggate service image."
 	@echo "  restart        - Restart all services."
 	@echo "  logs           - Follow logs of the loggate service."
 	@echo "  status         - Show the status of all services."
 	@echo ""
 	@echo "Data & Configuration:"
-	@echo "  backup         - Create a cold backup of Loki data by running the backup script."
+	@echo "  backup         - Create a cold backup of Loki data by running the backup script (requires 'jq')."
 	@echo "  clean          - Stop services and REMOVE ALL DATA (volumes). Use with caution."
 	@echo "  config-dev     - Print instructions for setting up the .env file for development."
 	@echo "  config-prod    - Print instructions for setting up the .env file for production."
@@ -29,11 +30,15 @@ up:
 	@echo "Starting up services..."
 	@echo "Ensuring .env file exists..."
 	@cp -n .env.example .env || true
-	docker-compose up --build -d
+	docker-compose up -d
 
 down:
 	@echo "Stopping services..."
 	docker-compose down
+
+build:
+	@echo "Forcing a rebuild of the loggate service image..."
+	docker-compose build loggate
 
 restart:
 	@echo "Restarting services..."
