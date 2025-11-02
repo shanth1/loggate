@@ -89,6 +89,9 @@ clean:
 
 destroy: clean
 
+env:
+	@cp -n .env.example .env || true
+
 config-dev:
 	@echo "--- Development Configuration ---"
 	@echo "For local development, edit your .env file and set:"
