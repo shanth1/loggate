@@ -13,6 +13,7 @@ help:
 	@echo ""
 	@echo "Data & Configuration:"
 	@echo "  backup         - Create a cold backup of Loki data by running the backup script (requires 'jq')."
+	@echo "  restore        - Restore Loki data from a backup file. Usage: make restore BACKUP_FILE=<file.tar.gz>"
 	@echo "  clean          - Stop services and REMOVE ALL DATA (volumes). Use with caution."
 	@echo "  config-dev     - Print instructions for setting up the .env file for development."
 	@echo "  config-prod    - Print instructions for setting up the .env file for production."
@@ -56,6 +57,25 @@ status:
 
 backup:
 	@./scripts/backup.sh
+
+restore:
+	@# This block defines the target backup file.
+	@# If BACKUP_FILE is passed by the user, it uses that.
+	@# Otherwise, it finds the latest .tar.gz file in the 'backups' directory.
+	@TARGET_BACKUP="$(BACKUP_FILE)"; \
+	if [ -z "$$TARGET_BACKUP" ]; then \
+		echo "INFO: BACKUP_FILE not specified. Searching for the latest backup in 'backups/'..."; \
+		TARGET_BACKUP=$$(ls -t backups/loki-backup-*.tar.gz 2>/dev/null | head -n 1); \
+		if [ -z "$$TARGET_BACKUP" ]; then \
+			echo "❌ ERROR: No backup files found in the 'backups/' directory."; \
+			echo "   Please create a backup first using 'make backup'."; \
+			exit 1; \
+		fi; \
+		echo "✅ Found latest backup: $$TARGET_BACKUP"; \
+	fi; \
+	\
+	echo "---"; \
+	./scripts/restore.sh "$$TARGET_BACKUP"
 
 clean:
 	@echo "WARNING: This will permanently delete all logs, metrics, and dashboards."
