@@ -31,6 +31,7 @@ func (g *Generator) Generate() domain.LogMessage {
 	return domain.LogMessage{
 		Timestamp: time.Now(),
 		Level:     level,
+		App:       g.template.App,
 		Service:   g.template.Service,
 		Message:   message,
 		Fields:    g.generateFields(),

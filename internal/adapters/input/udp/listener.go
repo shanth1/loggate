@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/shanth1/gotools/log"
 	"github.com/shanth1/loggate/internal/core/domain"
@@ -46,8 +47,12 @@ func (l *Listener) Start(ctx context.Context) {
 			logger.Info().Msg("shutting down UDP listener...")
 			return
 		default:
-			n, _, err := l.conn.ReadFromUDP(buffer)
+			l.conn.SetReadDeadline(time.Now().Add(1 * time.Second))
+			n, addr, err := l.conn.ReadFromUDP(buffer)
 			if err != nil {
+				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+					continue
+				}
 				logger.Error().Err(err).Msg("reading from udp")
 				continue
 			}
@@ -55,6 +60,15 @@ func (l *Listener) Start(ctx context.Context) {
 			var msg domain.LogMessage
 			if err := json.Unmarshal(buffer[:n], &msg); err != nil {
 				logger.Warn().Err(err).Msg("failed to unmarshal log")
+				continue
+			}
+
+			if msg.App == "" {
+				logger.Warn().Str("source", addr.String()).Str("log_content", string(buffer[:n])).Msg("received log with missing 'app' field, dropping")
+				continue
+			}
+			if msg.Service == "" {
+				logger.Warn().Str("source", addr.String()).Str("log_content", string(buffer[:n])).Msg("received log with missing 'service' field, dropping")
 				continue
 			}
 

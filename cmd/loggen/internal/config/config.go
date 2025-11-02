@@ -1,9 +1,12 @@
 package config
 
 import (
-	"github.com/spf13/viper"
 	"time"
+
+	"github.com/spf13/viper"
 )
+
+// TODO: changed to gotools
 
 type Config struct {
 	Target    string
@@ -18,6 +21,7 @@ type loadConfig struct {
 }
 
 type TemplateConfig struct {
+	App      string
 	Service  string
 	Levels   map[string]float64
 	Messages map[string][]string

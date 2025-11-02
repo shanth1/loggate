@@ -1,126 +1,165 @@
-version: "3.8"
-
 services:
-    loggate:
-        build:
-            context: .
-            dockerfile: Dockerfile
-        container_name: loggate-service
-        ports:
-            - "10514:10514/udp"
-            - "9100:9100"
-        volumes:
-            - ./config/config.yaml:/etc/loggate/config.yaml:ro
-        restart: unless-stopped
-        command: ["/app/loggate_server", "-config", "/etc/loggate/config.yaml"]
-        networks:
-            - monitoring
-        # healthcheck:
-        #     test:
-        #         [
-        #             "CMD",
-        #             "wget",
-        #             "--spider",
-        #             "-q",
-        #             "http://localhost:9091/metrics",
-        #         ]
-        #     interval: 10s
-        #     timeout: 5s
-        #     retries: 5
+  loggate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: loggate-service
+    ports:
+      - '${LOGGATE_UDP_PORT:-10514}:10514/udp'
+      - '${DOCKER_HOST_BIND_IP:-0.0.0.0}:${LOGGATE_HTTP_PORT:-9100}:9100'
+    volumes:
+      - ./config/config.yaml:/etc/loggate/config.yaml:ro
+    restart: unless-stopped
+    command: ['/app/loggate_server', '-config', '/etc/loggate/config.yaml']
+    networks:
+      - monitoring
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:9100/metrics']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '${LOGGATE_LIMIT_CPUS:-0}'
+          memory: '${LOGGATE_LIMIT_MEM:-0}'
+        reservations:
+          cpus: '${LOGGATE_RESERVE_CPUS:-0}'
+          memory: '${LOGGATE_RESERVE_MEM:-0}'
 
-    prometheus:
-        image: prom/prometheus:v2.47.0
-        container_name: prometheus
-        ports:
-            - "9090:9090"
-        volumes:
-            - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
-            - prometheus_data:/prometheus
-        command:
-            - "--config.file=/etc/prometheus/prometheus.yml"
-            - "--storage.tsdb.path=/prometheus"
-            - "--web.enable-lifecycle"
-        restart: unless-stopped
-        networks:
-            - monitoring
-        depends_on:
-            - loggate
-            # loggate:
-            # condition: service_healthy
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: prometheus
+    ports:
+      - '${DOCKER_HOST_BIND_IP:-0.0.0.0}:${PROMETHEUS_PORT:-9090}:9090'
+    volumes:
+      - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - monitoring
+    depends_on:
+      loggate:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '${PROMETHEUS_LIMIT_CPUS:-0}'
+          memory: '${PROMETHEUS_LIMIT_MEM:-0}'
+        reservations:
+          cpus: '${PROMETHEUS_RESERVE_CPUS:-0}'
+          memory: '${PROMETHEUS_RESERVE_MEM:-0}'
 
-    loki:
-        image: grafana/loki:2.9.1
-        container_name: loki
-        ports:
-            - "3100:3100"
-        volumes:
-            - ./loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
-            - loki_data:/loki
-        command: -config.file=/etc/loki/local-config.yaml
-        restart: unless-stopped
-        networks:
-            - monitoring
-        healthcheck:
-            test:
-                ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
-            interval: 10s
-            timeout: 5s
-            retries: 5
+  loki:
+    image: grafana/loki:2.9.1
+    container_name: loki
+    ports:
+      - '${DOCKER_HOST_BIND_IP:-0.0.0.0}:${LOKI_PORT:-3100}:3100'
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+    networks:
+      - monitoring
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:3100/ready']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '${LOKI_LIMIT_CPUS:-0}'
+          memory: '${LOKI_LIMIT_MEM:-0}'
+        reservations:
+          cpus: '${LOKI_RESERVE_CPUS:-0}'
+          memory: '${LOKI_RESERVE_MEM:-0}'
 
-    promtail:
-        image: grafana/promtail:2.9.1
-        container_name: promtail
-        volumes:
-            - ./promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
-            - /var/run/docker.sock:/var/run/docker.sock:ro
-            - promtail_positions:/tmp/positions
-        command: -config.file=/etc/promtail/config.yaml
-        restart: unless-stopped
-        networks:
-            - monitoring
-        depends_on:
-            loki:
-                condition: service_healthy
+  promtail:
+    image: grafana/promtail:2.9.1
+    container_name: promtail
+    ports:
+      - '${DOCKER_HOST_BIND_IP:-0.0.0.0}:${PROMTAIL_PORT:-9080}:9080'
+    volumes:
+      - ./promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - promtail_positions:/tmp/positions
+    command: -config.file=/etc/promtail/config.yaml
+    restart: unless-stopped
+    networks:
+      - monitoring
+    depends_on:
+      loki:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '${PROMTAIL_LIMIT_CPUS:-0}'
+          memory: '${PROMTAIL_LIMIT_MEM:-0}'
+        reservations:
+          cpus: '${PROMTAIL_RESERVE_CPUS:-0}'
+          memory: '${PROMTAIL_RESERVE_MEM:-0}'
 
-    grafana:
-        image: grafana/grafana:10.1.1
-        container_name: grafana
-        ports:
-            - "3000:3000"
-        volumes:
-            - grafana_data:/var/lib/grafana
-            - ./grafana/provisioning/:/etc/grafana/provisioning/:ro
-        environment:
-            - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
-            - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
-            - GF_USERS_ALLOW_SIGN_UP=false
-        restart: unless-stopped
-        networks:
-            - monitoring
-        depends_on:
-            - prometheus
-            - loki
+  grafana:
+    image: grafana/grafana:10.1.1
+    container_name: grafana
+    ports:
+      - '${DOCKER_HOST_BIND_IP:-0.0.0.0}:${GRAFANA_PORT:-3000}:3000'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+      - loki
+    deploy:
+      resources:
+        limits:
+          cpus: '${GRAFANA_LIMIT_CPUS:-0}'
+          memory: '${GRAFANA_LIMIT_MEM:-0}'
+        reservations:
+          cpus: '${GRAFANA_RESERVE_CPUS:-0}'
+          memory: '${GRAFANA_RESERVE_MEM:-0}'
 
-    cadvisor:
-        image: gcr.io/cadvisor/cadvisor:v0.47.2
-        container_name: cadvisor
-        ports:
-            - "8080:8080"
-        volumes:
-            - /:/rootfs:ro
-            - /var/run:/var/run:rw
-            - /sys:/sys:ro
-            - /var/lib/docker/:/var/lib/docker:ro
-        restart: unless-stopped
-        networks:
-            - monitoring
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: cadvisor
+    ports:
+      - '${DOCKER_HOST_BIND_IP:-0.0.0.0}:${CADVISOR_PORT:-8080}:8080'
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    restart: unless-stopped
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          cpus: '${CADVISOR_LIMIT_CPUS:-0}'
+          memory: '${CADVISOR_LIMIT_MEM:-0}'
+        reservations:
+          cpus: '${CADVISOR_RESERVE_CPUS:-0}'
+          memory: '${CADVISOR_RESERVE_MEM:-0}'
 
 networks:
-    monitoring:
-        driver: bridge
+  monitoring:
+    driver: bridge
 
 volumes:
-    prometheus_data:
-    loki_data:
-    promtail_positions:
-    grafana_data:
+  prometheus_data:
+  loki_data:
+  promtail_positions:
+  grafana_data:

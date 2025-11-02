@@ -40,7 +40,7 @@ func main() {
 		case "console":
 			storage = console.New()
 		default:
-			logger.Fatal().Msg(fmt.Sprintf("unknown storage type: %s", storageCfg.Type))
+			logger.Warn().Msg(fmt.Sprintf("storage type '%s' is enabled but not implemented, skipping", storageCfg.Type))
 		}
 
 		if storage != nil {
@@ -49,11 +49,11 @@ func main() {
 	}
 
 	if len(storages) == 0 {
-		logger.Fatal().Msg("no active storages cofigured")
+		logger.Fatal().Msg("no active storages configured")
 	}
 
 	// --- Core ---
-	logService := service.NewLogService(storages, cfg.RoutingRules, cfg.DefaultDestinations)
+	logService := service.NewLogService(storages, cfg.RoutingRules, cfg.DefaultDestinations, cfg.Performance)
 
 	// --- Input/Driver Adapter ---
 	infoServer := server.New(cfg.Server.InfoAddress)
@@ -64,21 +64,18 @@ func main() {
 	}
 
 	// --- Start ---
-
 	go logService.Start(ctx)
-
 	go udpListener.Start(ctx)
 	go infoServer.Start(ctx)
 
 	// --- Graceful Shutdown ---
-
 	<-ctx.Done()
 
 	logger.Info().Msg("shutting down server...")
 
-	for _, s := range storages {
+	for name, s := range storages {
 		if err := s.Close(); err != nil {
-			logger.Error().Err(err).Msg("close storage")
+			logger.Error().Err(err).Str("storage", name).Msg("close storage")
 		}
 	}
 

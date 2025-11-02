@@ -17,6 +17,7 @@ func MustGetConfig() *Config {
 
 type Config struct {
 	Server              *Server             `mapstructure:"server"`
+	Performance         *Performance        `mapstructure:"performance"`
 	Storages            map[string]*Storage `mapstructure:"storages"`
 	RoutingRules        []*RoutingRule      `mapstructure:"routing_rules"`
 	DefaultDestinations []string            `mapstructure:"default_destinations"`
@@ -25,6 +26,12 @@ type Config struct {
 type Server struct {
 	LogAddress  string `mapstructure:"log_address"`
 	InfoAddress string `mapstructure:"info_address"`
+}
+
+type Performance struct {
+	BufferSize     int `mapstructure:"buffer_size"`
+	BatchSize      int `mapstructure:"batch_size"`
+	BatchTimeoutMs int `mapstructure:"batch_timeout_ms"`
 }
 
 type Storage struct {

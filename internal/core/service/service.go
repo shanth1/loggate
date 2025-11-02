@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -13,30 +12,37 @@ import (
 	"github.com/shanth1/loggate/internal/core/ports"
 )
 
-const (
-	bufferSize   = 1000
-	batchSize    = 1000
-	batchTimeout = 5 * time.Second
-)
-
 type LogService struct {
 	storages            map[string]ports.LogStorage
 	destinationChannels map[string]chan domain.LogMessage
 	wg                  sync.WaitGroup
 	routingRules        []*config.RoutingRule
 	defaultDestinations []string
+	performance         *config.Performance
 }
 
 func NewLogService(
 	storages map[string]ports.LogStorage,
 	routingRules []*config.RoutingRule,
 	defaultDestinations []string,
+	performance *config.Performance,
 ) *LogService {
+	if performance.BufferSize == 0 {
+		performance.BufferSize = 1000
+	}
+	if performance.BatchSize == 0 {
+		performance.BatchSize = 1000
+	}
+	if performance.BatchTimeoutMs == 0 {
+		performance.BatchTimeoutMs = 5000
+	}
+
 	return &LogService{
 		storages:            storages,
 		destinationChannels: make(map[string]chan domain.LogMessage),
 		routingRules:        routingRules,
 		defaultDestinations: defaultDestinations,
+		performance:         performance,
 	}
 }
 
@@ -45,7 +51,7 @@ func (s *LogService) Start(ctx context.Context) {
 	logger.Info().Msg("starting log service workers")
 
 	for name, storage := range s.storages {
-		s.destinationChannels[name] = make(chan domain.LogMessage, bufferSize)
+		s.destinationChannels[name] = make(chan domain.LogMessage, s.performance.BufferSize)
 		s.wg.Add(1)
 		go s.runWorker(ctx, name, storage, s.destinationChannels[name])
 	}
@@ -69,10 +75,10 @@ func (s *LogService) Ingest(ctx context.Context, msg domain.LogMessage) {
 			select {
 			case channel <- msg:
 			default:
-				logger.Warn().Msg(fmt.Sprintf("buffer for destination '%s' is full. Log message dropped.", destName))
+				logger.Warn().Str("destination", destName).Msg("buffer is full. Log message dropped.")
 			}
 		} else {
-			logger.Warn().Msg(fmt.Sprintf("routing rule points to a non-configured storage: %s", destName))
+			logger.Warn().Str("destination", destName).Msg("routing rule points to a non-configured or disabled storage")
 		}
 	}
 }
@@ -80,6 +86,9 @@ func (s *LogService) Ingest(ctx context.Context, msg domain.LogMessage) {
 func (s *LogService) runWorker(ctx context.Context, name string, storage ports.LogStorage, channel <-chan domain.LogMessage) {
 	defer s.wg.Done()
 	logger := log.FromCtx(ctx).With().Str("storage", name).Logger()
+
+	batchSize := s.performance.BatchSize
+	batchTimeout := time.Duration(s.performance.BatchTimeoutMs) * time.Millisecond
 
 	batch := make([]domain.LogMessage, 0, batchSize)
 	ticker := time.NewTicker(batchTimeout)
@@ -91,29 +100,20 @@ func (s *LogService) runWorker(ctx context.Context, name string, storage ports.L
 		select {
 		case <-ctx.Done():
 			logger.Info().Msg("shutdown signal received, flushing remaining logs")
-
-			flushCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			defer cancel()
+			for len(channel) > 0 {
+				batch = append(batch, <-channel)
+			}
 			if len(batch) > 0 {
+				flushCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				if err := storage.Store(flushCtx, batch); err != nil {
 					logger.Error().Err(err).Msg("failed to store final batch")
 				}
+				cancel()
 			}
 			logger.Info().Msg("worker stopped")
 			return
 
-		case msg, ok := <-channel:
-			if !ok {
-				logger.Warn().Msg("channel closed unexpectedly, flushing remaining logs")
-				if len(batch) > 0 {
-					if err := storage.Store(ctx, batch); err != nil {
-						logger.Error().Err(err).Msg("failed to store final batch on channel close")
-					}
-				}
-				logger.Info().Msg("worker stopped")
-				return
-			}
-
+		case msg := <-channel:
 			batch = append(batch, msg)
 			if len(batch) >= batchSize {
 				if err := storage.Store(ctx, batch); err != nil {
@@ -136,12 +136,18 @@ func (s *LogService) runWorker(ctx context.Context, name string, storage ports.L
 
 func (s *LogService) findDestinations(msg domain.LogMessage) []string {
 	for _, rule := range s.routingRules {
-		if rule.MatchCondition.Service != msg.Service {
+		if rule.MatchCondition == nil {
 			continue
 		}
-		if !strings.EqualFold(rule.MatchCondition.Level, msg.Level) {
+
+		if rule.MatchCondition.Service != "" && rule.MatchCondition.Service != msg.Service {
 			continue
 		}
+
+		if rule.MatchCondition.Level != "" && !strings.EqualFold(rule.MatchCondition.Level, msg.Level) {
+			continue
+		}
+
 		return rule.Destinations
 	}
 
