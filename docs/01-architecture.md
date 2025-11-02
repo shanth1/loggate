@@ -1,21 +1,23 @@
-# 1. Архитектура системы LogGate
+# 1. LogGate System Architecture
 
-## 1.1. Концепция
+[RU](./01-architecture.ru.md)
 
-LogGate спроектирован как промежуточный слой (middleware) между источниками логов (приложениями) и системами их хранения. Его основная задача — снять с приложений ответственность за то, _куда_ и _как_ доставлять логи. Приложения просто отправляют структурированные сообщения по UDP, а LogGate берет на себя маршрутизацию, буферизацию и доставку.
+## 1.1. Concept
 
-Это позволяет:
+LogGate is designed as a middleware layer between log sources (applications) and their storage systems. Its main task is to relieve applications of the responsibility of _where_ and _how_ to deliver logs. Applications simply send structured messages over UDP, and LogGate handles routing, buffering, and delivery.
 
-- **Снизить нагрузку на приложения:** Отправка логов по UDP — это неблокирующая операция "fire-and-forget".
-- **Централизовать логику маршрутизации:** Изменение хранилища логов (например, миграция с Loki на ClickHouse) требует изменения конфигурации только в одном месте — в LogGate.
-- **Обеспечить отказоустойчивость:** LogGate может буферизировать логи, если целевое хранилище временно недоступно (функционал в разработке).
+This allows for:
 
-## 1.2. Схема взаимодействия компонентов
+- **Reduced Load on Applications:** Sending logs via UDP is a non-blocking "fire-and-forget" operation.
+- **Centralized Routing Logic:** Changing the log storage (e.g., migrating from Loki to ClickHouse) requires a configuration change in only one place—LogGate.
+- **Fault Tolerance:** LogGate can buffer logs if the target storage is temporarily unavailable (feature under development).
+
+## 1.2. Component Interaction Diagram
 
 ```
 
                                       +-------------------------+
-                                      |      Внешние сервисы    |
+                                      |    External Services    |
                                       +-------------------------+
                                                   |
                                                   | (UDP, JSON Logs)
@@ -54,26 +56,26 @@ LogGate спроектирован как промежуточный слой (m
 
 ```
 
-## 1.3. Описание компонентов
+## 1.3. Component Description
 
-| Сервис                | Роль в системе                                                                                                                           | Ключевые файлы/порты                   |
-| :-------------------- | :--------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------- |
-| **`loggate-service`** | **Ядро системы.** Принимает логи по UDP, маршрутизирует их согласно `config.yaml` и выводит в `stdout`. Экспортирует метрики Prometheus. | `10514/udp`, `9100/tcp`, `config.yaml` |
-| **`prometheus`**      | Система сбора, хранения и обработки метрик. Опрашивает `loggate`, `loki`, `promtail` и `cadvisor`.                                       | `9090/tcp`, `prometheus.yaml`          |
-| **`loki`**            | Система агрегации и хранения логов. Принимает обработанные логи от `promtail`.                                                           | `3100/tcp`, `loki-config.yaml`         |
-| **`promtail`**        | Агент для сбора логов. Читает `stdout` контейнера `loggate`, парсит JSON, обогащает метаданными (метками) и отправляет в Loki.           | `promtail-config.yaml`                 |
-| **`grafana`**         | Платформа для визуализации. Отображает метрики из Prometheus и логи из Loki на готовом дашборде.                                         | `3000/tcp`, `grafana/provisioning/*`   |
-| **`cadvisor`**        | Собирает метрики об использовании ресурсов (CPU, memory, network) всеми Docker контейнерами на хосте.                                    | `8080/tcp`                             |
+| Service               | Role in the System                                                                                                                                    | Key Files/Ports                        |
+| :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------- |
+| **`loggate-service`** | **The core of the system.** Receives logs over UDP, routes them according to `config.yaml`, and outputs them to `stdout`. Exports Prometheus metrics. | `10514/udp`, `9100/tcp`, `config.yaml` |
+| **`prometheus`**      | A system for collecting, storing, and processing metrics. Scrapes `loggate`, `loki`, `promtail`, and `cadvisor`.                                      | `9090/tcp`, `prometheus.yaml`          |
+| **`loki`**            | A log aggregation and storage system. Receives processed logs from `promtail`.                                                                        | `3100/tcp`, `loki-config.yaml`         |
+| **`promtail`**        | An agent for collecting logs. Reads `stdout` from the `loggate` container, parses JSON, enriches it with metadata (labels), and sends it to Loki.     | `promtail-config.yaml`                 |
+| **`grafana`**         | A visualization platform. Displays metrics from Prometheus and logs from Loki on a pre-configured dashboard.                                          | `3000/tcp`, `grafana/provisioning/*`   |
+| **`cadvisor`**        | Collects resource usage metrics (CPU, memory, network) for all Docker containers on the host.                                                         | `8080/tcp`                             |
 
-## 1.4. Поток обработки лога (Data Flow)
+## 1.4. Log Processing Flow (Data Flow)
 
-1.  **Приём:** Внешний сервис отправляет JSON-сообщение по UDP на порт `10514`.
-2.  **Декодирование:** `loggate-service` (`udp/listener.go`) принимает пакет, валидирует и декодирует его в структуру `domain.LogMessage`. Обязательные поля: `app` и `service`.
-3.  **Маршрутизация:** Ядро сервиса (`service/service.go`) проверяет `routing_rules` из `config.yaml`. На основе полей `service` и/или `level` лога определяется список хранилищ-получателей (`destinations`). Если ни одно правило не подошло, используется `default_destinations`.
-4.  **Буферизация:** Лог помещается во внутренний Go-канал, соответствующий каждому назначенному хранилищу. Это предотвращает блокировку входного потока.
-5.  **Пакетная обработка:** Воркер для каждого хранилища накапливает логи из канала в пакет (`batch`). Пакет отправляется при достижении `batch_size` или по таймауту `batch_timeout_ms`.
-6.  **Вывод:** В текущей конфигурации единственное активное хранилище — `console`. Оно сериализует каждый лог из пакета обратно в JSON и выводит в `stdout` контейнера.
-7.  **Сбор Promtail:** `promtail` настроен на чтение `stdout` контейнера `loggate-service`.
-8.  **Обогащение и индексация:** С помощью `pipeline_stages` в `promtail-config.yaml`, Promtail парсит JSON-строку, извлекает поля `app`, `service`, `level` и превращает их в **метки (labels) Loki**. Это ключевой шаг, который делает логи индексируемыми и позволяет быстро фильтровать их в Grafana.
-9.  **Хранение:** Promtail отправляет обработанные логи с метками в Loki.
-10. **Визуализация:** Пользователь открывает дашборд в Grafana, который выполняет LogQL-запросы к Loki для отображения и фильтрации логов.
+1.  **Ingestion:** An external service sends a JSON message via UDP to port `10514`.
+2.  **Decoding:** `loggate-service` (`udp/listener.go`) receives the packet, validates it, and decodes it into a `domain.LogMessage` struct. Required fields: `app` and `service`.
+3.  **Routing:** The service core (`service/service.go`) checks the `routing_rules` in `config.yaml`. Based on the `service` and/or `level` fields of the log, a list of destination storages is determined. If no rule matches, the `default_destinations` are used.
+4.  **Buffering:** The log is placed into an internal Go channel corresponding to each assigned storage. This prevents blocking the input stream.
+5.  **Batch Processing:** A worker for each storage accumulates logs from the channel into a batch. The batch is sent when `batch_size` is reached or `batch_timeout_ms` expires.
+6.  **Output:** In the current configuration, the only active storage is `console`. It serializes each log from the batch back into JSON and writes it to the container's `stdout`.
+7.  **Collection by Promtail:** `promtail` is configured to read the `stdout` of the `loggate-service` container.
+8.  **Enrichment and Indexing:** Using `pipeline_stages` in `promtail-config.yaml`, Promtail parses the JSON string, extracts the `app`, `service`, and `level` fields, and converts them into **Loki labels**. This is a crucial step that makes logs indexable and allows for fast filtering in Grafana.
+9.  **Storage:** Promtail sends the processed logs with labels to Loki.
+10. **Visualization:** The user opens a dashboard in Grafana, which executes LogQL queries against Loki to display and filter logs.

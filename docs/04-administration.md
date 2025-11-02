@@ -1,127 +1,129 @@
-# 4. Администрирование и эксплуатация
+# 4. Administration and Operations
 
-## 4.1. Основные команды управления
+[RU](./04-administration.ru.md)
 
-Все основные операции удобно выполнять с помощью `Makefile`.
+## 4.1. Basic Management Commands
 
-- **Запуск/остановка стека:**
+All primary operations can be conveniently performed using the `Makefile`.
+
+- **Start/Stop the Stack:**
   ```bash
-  make up       # Собрать и запустить все сервисы в фоновом режиме
-  make down     # Остановить и удалить все контейнеры
-  make restart  # Перезапустить все сервисы
+  make up       # Build and start all services in the background
+  make down     # Stop and remove all containers
+  make restart  # Restart all services
   ```
-- **Работа с логами и состоянием:**
+- **Working with Logs and Status:**
   ```bash
-  make status   # Показать статус всех контейнеров
-  make logs     # Показать и отслеживать логи сервиса loggate-service
+  make status   # Show the status of all containers
+  make logs     # Show and follow the logs of the loggate-service
   ```
-- **Управление данными:**
+- **Data Management:**
   ```bash
-  make clean    # ОСТОРОЖНО: Останавливает сервисы и УДАЛЯЕТ ВСЕ ДАННЫЕ (volumes)
+  make clean    # CAUTION: Stops services and DELETES ALL DATA (volumes)
   ```
-- **Отладка:**
+- **Debugging:**
   ```bash
-  make shell    # Открыть shell внутри контейнера loggate-service
+  make shell    # Open a shell inside the loggate-service container
   ```
 
-## 4.2. Резервное копирование и восстановление
+## 4.2. Backup and Restore
 
-Скрипты `scripts/backup.sh` и `scripts/restore.sh` позволяют выполнять "холодное" резервное копирование данных Loki.
+The `scripts/backup.sh` and `scripts/restore.sh` scripts allow for "cold" backups of Loki data.
 
-### Создание бэкапа
+### Creating a Backup
 
-Команда создает `*.tar.gz` архив с данными Loki в директории `backups/`.
+This command creates a `*.tar.gz` archive with Loki data in the `backups/` directory.
 
 ```bash
 make backup
 ```
 
-**Процесс:**
+**Process:**
 
-1.  Проверяет наличие утилиты `jq`.
-2.  Находит имя Docker-тома, используемого Loki.
-3.  Останавливает `loki` и `promtail` для обеспечения целостности данных.
-4.  Запускает временный контейнер, который архивирует содержимое тома.
-5.  Запускает `loki` и `promtail` обратно.
+1.  Checks for the `jq` utility.
+2.  Finds the name of the Docker volume used by Loki.
+3.  Stops `loki` and `promtail` to ensure data integrity.
+4.  Runs a temporary container that archives the volume's content.
+5.  Starts `loki` and `promtail` again.
 
-### Восстановление из бэкапа
+### Restoring from a Backup
 
-**ВНИМАНИЕ:** Эта операция является деструктивной и полностью перезапишет текущие данные Loki.
+**WARNING:** This is a destructive operation and will completely overwrite the current Loki data.
 
 ```bash
-# Восстановление из самого свежего бэкапа в папке backups/
+# Restore from the latest backup in the backups/ folder
 make restore
 
-# Восстановление из конкретного файла
+# Restore from a specific file
 make restore BACKUP_FILE=backups/loki-backup-YYYY-MM-DD_HH-MM-SS.tar.gz
 ```
 
-**Процесс:**
+**Process:**
 
-1.  Запрашивает подтверждение у пользователя.
-2.  Останавливает `loki` и `promtail`.
-3.  **Полностью очищает** текущий том с данными Loki.
-4.  Распаковывает указанный архив в том.
-5.  Запускает сервисы.
+1.  Asks for user confirmation.
+2.  Stops `loki` and `promtail`.
+3.  **Completely wipes** the current Loki data volume.
+4.  Unpacks the specified archive into the volume.
+5.  Starts the services.
 
-## 4.3. Мониторинг
+## 4.3. Monitoring
 
-Основной инструмент мониторинга — дашборд `LogGate Application` в Grafana (`http://localhost:3000`).
+The primary monitoring tool is the `LogGate Application` dashboard in Grafana (`http://localhost:3000`).
 
-### Панели дашборда
+### Dashboard Panels
 
-<!-- МЕСТО ДЛЯ СКРИНШОТА: Общий вид дашборда Grafana -->
+<!-- SCREENSHOT LOCATION: General view of the Grafana dashboard -->
 
-**[ВСТАВИТЬ СКРИНШОТ ДАШБОРДА ЗДЕСЬ]**
+**[INSERT DASHBOARD SCREENSHOT HERE]**
 
-- **Key Metrics (Статистика):**
-  - `Total Log Rate`: Общее количество строк логов в секунду. Показывает общую нагрузку на систему.
-  - `Error Rate`: Количество логов с уровнями `error`, `crit`, `fatal`. Ключевой показатель здоровья приложений.
-  - `Loggate Goroutines`: Количество горутин в `loggate-service`. Резкий рост может указывать на утечки или блокировки.
-  - `Loggate Memory (Alloc)`: Объем памяти, выделенный `loggate-service`.
+- **Key Metrics:**
+  - `Total Log Rate`: The total number of log lines per second. Shows the overall system load.
+  - `Error Rate`: The number of logs with `error`, `crit`, or `fatal` levels. A key indicator of application health.
+  - `Loggate Goroutines`: The number of goroutines in `loggate-service`. A sharp increase could indicate leaks or deadlocks.
+  - `Loggate Memory (Alloc)`: The amount of memory allocated by `loggate-service`.
 
-- **Visualizations (Визуализации):**
-  - `Log Volume by Level`: Распределение логов по уровням во времени. Помогает выявить аномалии (например, внезапный всплеск ошибок).
-    <!-- МЕСТО ДЛЯ СКРИНШОТА: График Log Volume by Level -->
+- **Visualizations:**
+  - `Log Volume by Level`: A time-series graph showing the distribution of logs by level. Helps to identify anomalies (e.g., a sudden spike in errors).
+    <!-- SCREENSHOT LOCATION: "Log Volume by Level" graph -->
 
-    **[ВСТАВИТЬ СКРИНШОТ ГРАФИКА "LOG VOLUME BY LEVEL" ЗДЕСЬ]**
+    **[INSERT "LOG VOLUME BY LEVEL" GRAPH SCREENSHOT HERE]**
 
-  - `Log Distribution by Service`: Круговая диаграмма, показывающая, какие сервисы генерируют больше всего логов за выбранный период.
+  - `Log Distribution by Service`: A pie chart showing which services generate the most logs over the selected time period.
 
-- **Logs Panel (Панель логов):**
-  - Интерактивная панель для просмотра и поиска логов в реальном времени.
-  - Используйте переменные вверху дашборда (`Application`, `Service`, `Level`) для быстрой фильтрации по индексированным меткам.
-  - Используйте поле `Log Search` для полнотекстового поиска по содержимому логов (медленнее, чем фильтры).
-    <!-- МЕСТО ДЛЯ СКРИНШОТА: Панель логов с примером фильтрации -->
-    **[ВСТАВИТЬ СКРИНШОТ ПАНЕЛИ ЛОГОВ ЗДЕСЬ]**
+- **Logs Panel:**
+  - An interactive panel for viewing and searching logs in real-time.
+  - Use the variables at the top of the dashboard (`Application`, `Service`, `Level`) to quickly filter by indexed labels.
+  - Use the `Log Search` field for full-text search within log content (slower than filters).
+    <!-- SCREENSHOT LOCATION: Logs panel with a filter example -->
+    **[INSERT LOGS PANEL SCREENSHOT HERE]**
 
-### Ручная проверка и запросы
+### Manual Checks and Queries
 
-Используйте вкладку **Explore** в Grafana для выполнения произвольных LogQL-запросов к Loki.
+Use the **Explore** tab in Grafana to run custom LogQL queries against Loki.
 
-**Примеры запросов:**
+**Example Queries:**
 
 ```logql
-# Найти все логи от auth-service с уровнем ERROR
+# Find all logs from auth-service with level ERROR
 {service="auth-service", level="error"}
 
-# Найти все логи, содержащие "failed to connect" (поиск по тексту, медленный)
+# Find all logs containing "failed to connect" (slow text search)
 {app="user-management"} |= "failed to connect"
 
-# Посчитать количество логов в минуту, сгруппировав по сервису
+# Count the number of logs per minute, grouped by service
 sum by (service) (rate({app="e-commerce"}[1m]))
 ```
 
-## 4.4. Устранение неисправностей
+## 4.4. Troubleshooting
 
-- **LogGate не принимает логи:**
-  1.  Проверьте логи самого сервиса: `make logs`.
-  2.  Убедитесь, что порт `10514/udp` не занят другим процессом на хосте.
-  3.  Отправьте тестовый пакет вручную с помощью `netcat` и проверьте логи:
+- **LogGate is not receiving logs:**
+  1.  Check the service's own logs: `make logs`.
+  2.  Ensure that port `10514/udp` is not occupied by another process on the host.
+  3.  Send a test packet manually using `netcat` and check the logs:
       ```bash
       echo '{"app": "test", "service": "manual", "level": "INFO", "message": "hello from netcat"}' | nc -u -w0 127.0.0.1 10514
       ```
-- **Логи не появляются в Grafana:**
-  1.  Проверьте логи `promtail`: `docker-compose logs -f promtail`. Ищите ошибки парсинга JSON или подключения к Loki.
-  2.  Проверьте логи `loki`: `docker-compose logs -f loki`.
-  3.  Убедитесь, что в Grafana (раздел Data Sources) корректно настроены и работают источники данных Prometheus и Loki.
+- **Logs are not appearing in Grafana:**
+  1.  Check the `promtail` logs: `docker-compose logs -f promtail`. Look for JSON parsing errors or connection issues with Loki.
+  2.  Check the `loki` logs: `docker-compose logs -f loki`.
+  3.  In Grafana (Data Sources section), verify that the Prometheus and Loki data sources are configured correctly and are working.

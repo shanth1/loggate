@@ -1,69 +1,71 @@
-# LogGate: Высокопроизводительный шлюз для маршрутизации логов
+# LogGate: High-Performance Gateway for Log Routing
+
+[RU](./README.ru.md)
 
 [![Go Version](https://img.shields.io/github/go-mod/go-version/shanth1/loggate?style=flat-square)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](/LICENSE)
 
-**LogGate** — это централизованный сервис-шлюз для приёма, буферизации и маршрутизации логов от различных приложений. Он спроектирован для высокой производительности и легкой расширяемости, позволяя направлять потоки логов в различные системы хранения на основе гибких правил.
+**LogGate** is a centralized gateway service for receiving, buffering, and routing logs from various applications. It is designed for high performance and easy extensibility, allowing log streams to be directed to different storage systems based on flexible rules.
 
-Проект поставляется с готовым к использованию стеком мониторинга на базе **Prometheus, Grafana и Loki**, обеспечивая полное "коробочное" решение для сбора, хранения и визуализации логов и метрик.
+The project comes with a ready-to-use monitoring stack based on **Prometheus, Grafana, and Loki**, providing a complete "out-of-the-box" solution for collecting, storing, and visualizing logs and metrics.
 
-## Ключевые особенности
+## Key Features
 
-- **Централизованный приём:** Принимает структурированные JSON-логи по протоколу UDP для минимальных задержек у отправителей.
-- **Гибкая маршрутизация:** Правила в `config.yaml` позволяют направлять логи в разные хранилища (storages) на основе атрибутов лога (`service`, `level` и др.).
-- **Высокая производительность:** Написан на Go. Использует внутреннюю буферизацию и пакетную обработку для минимизации нагрузки на системы хранения.
-- **Расширяемая архитектура:** Адаптеры вывода позволяют легко добавлять поддержку новых хранилищ (ClickHouse, Elasticsearch и т.д.).
-- **Готовый стек "из коробки":** `docker-compose.yaml` разворачивает не только LogGate, но и весь необходимый инструментарий: Prometheus, Loki, Grafana, cAdvisor.
-- **Инструменты для разработки:** Включает генератор логов (`loggen`) для тестирования нагрузки и отладки.
+- **Centralized Ingestion:** Accepts structured JSON logs over UDP for minimal latency on the sender's side.
+- **Flexible Routing:** Rules in `config.yaml` allow logs to be directed to different storages based on log attributes (`service`, `level`, etc.).
+- **High Performance:** Written in Go. Uses internal buffering and batch processing to minimize load on storage systems.
+- **Extensible Architecture:** Output adapters make it easy to add support for new storages (ClickHouse, Elasticsearch, etc.).
+- **Ready-to-use Stack:** `docker-compose.yaml` deploys not only LogGate but also the entire necessary toolkit: Prometheus, Loki, Grafana, cAdvisor.
+- **Development Tools:** Includes a log generator (`loggen`) for load testing and debugging.
 
-## Стек технологий
+## Technology Stack
 
-- **Сервис:** Go
-- **Оркестрация:** Docker, Docker Compose
-- **Сбор метрик:** Prometheus, cAdvisor
-- **Агрегация логов:** Loki, Promtail
-- **Визуализация:** Grafana
+- **Service:** Go
+- **Orchestration:** Docker, Docker Compose
+- **Metrics Collection:** Prometheus, cAdvisor
+- **Log Aggregation:** Loki, Promtail
+- **Visualization:** Grafana
 
-## Быстрый старт
+## Quick Start
 
-1.  **Подготовка:** Убедитесь, что у вас установлены `Docker`, `Docker Compose` и `make`.
+1.  **Prerequisites:** Ensure you have `Docker`, `Docker Compose`, and `make` installed.
 
-2.  **Конфигурация:** Создайте файл `.env` из примера.
+2.  **Configuration:** Create a `.env` file from the example.
 
     ```bash
     cp .env.example .env
     ```
 
-3.  **Запуск стека:** Соберите и запустите все сервисы в фоновом режиме.
+3.  **Start the Stack:** Build and run all services in the background.
 
     ```bash
     make up
     ```
 
-4.  **Генерация тестовых логов:** Запустите генератор для отправки логов в LogGate.
+4.  **Generate Test Logs:** Run the generator to send logs to LogGate.
 
     ```bash
     make gen-logs
     ```
 
-5.  **Доступ к интерфейсам:**
+5.  **Access Interfaces:**
     - **Grafana:** [http://localhost:3000](http://localhost:3000) (login: `admin`/`admin`)
-      - _Дашборд "LogGate Application" уже будет доступен._
+      - _The "LogGate Application" dashboard will already be available._
     - **Prometheus:** [http://localhost:9090](http://localhost:9090)
     - **cAdvisor:** [http://localhost:8080](http://localhost:8080)
 
-## Документация
+## Documentation
 
-Полная документация разделена на несколько файлов для удобства навигации.
+The full documentation is divided into several files for easy navigation.
 
-| Раздел                                                  | Описание                                                                           |
-| :------------------------------------------------------ | :--------------------------------------------------------------------------------- |
-| **[1. Архитектура](docs/01-architecture.md)**           | Обзор компонентов системы, схемы взаимодействия и потока данных.                   |
-| **[2. Установка и запуск](docs/02-getting-started.md)** | Подробные инструкции по развертыванию для разработки и production.                 |
-| **[3. Конфигурация](docs/03-configuration.md)**         | Детальное описание всех конфигурационных файлов (`config.yaml`, `.env`, Promtail). |
-| **[4. Администрирование](docs/04-administration.md)**   | Задачи эксплуатации: мониторинг, резервное копирование, устранение неисправностей. |
-| **[5. Разработка](docs/05-development.md)**             | Руководство для контрибьюторов: структура проекта, добавление новых хранилищ.      |
+| Section                                              | Description                                                                          |
+| :--------------------------------------------------- | :----------------------------------------------------------------------------------- |
+| **[1. Architecture](docs/01-architecture.md)**       | An overview of the system components, interaction diagrams, and data flow.           |
+| **[2. Getting Started](docs/02-getting-started.md)** | Detailed instructions for deployment in development and production environments.     |
+| **[3. Configuration](docs/03-configuration.md)**     | A detailed description of all configuration files (`config.yaml`, `.env`, Promtail). |
+| **[4. Administration](docs/04-administration.md)**   | Operational tasks: monitoring, backup, troubleshooting.                              |
+| **[5. Development](docs/05-development.md)**         | A guide for contributors: project structure, adding new storages.                    |
 
-## Лицензия
+## License
 
-Проект распространяется под лицензией MIT. Подробности в файле [LICENSE](/LICENSE).
+This project is licensed under the MIT License. See the [LICENSE](/LICENSE) file for details.

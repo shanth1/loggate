@@ -1,54 +1,54 @@
-# 5. Разработка и расширение
+# 5. Development and Extension
 
-Этот раздел предназначен для разработчиков, которые хотят внести изменения в LogGate или расширить его функциональность.
+[RU](./05-development.ru.md)
 
-## 5.1. Структура проекта
+This section is for developers who want to contribute to LogGate or extend its functionality.
 
-```
-
-├── cmd/ # Точки входа приложений
-│ ├── loggate/ # Основной сервис LogGate
-│ └── loggen/ # Утилита для генерации логов
-├── config/ # Конфигурация для LogGate по умолчанию
-├── docs/ # Документация проекта
-├── internal/ # Исходный код приложения
-│ ├── adapters/ # Адаптеры (порты и адаптеры)
-│ │ ├── input/ # Входные адаптеры (e.g., UDP, TCP)
-│ │ └── output/ # Выходные адаптеры (e.g., console, clickhouse)
-│ ├── common/ # Общий код (логгер, константы)
-│ ├── config/ # Логика загрузки и парсинга конфигурации
-│ └── core/ # Ядро бизнес-логики
-│ ├── domain/ # Основные структуры данных (e.g., LogMessage)
-│ ├── ports/ # Интерфейсы для взаимодействия с ядром
-│ └── service/ # Реализация основной бизнес-логики
-├── scripts/ # Скрипты для администрирования (backup, restore)
-├── Makefile # Утилиты для сборки, запуска и управления
-├── go.mod / go.sum # Зависимости Go
-└── docker-compose.yaml # Определение стека сервисов
+## 5.1. Project Structure
 
 ```
+├── cmd/ # Application entry points
+│ ├── loggate/ # Main LogGate service
+│ └── loggen/ # Log generation utility
+├── config/ # Default configuration for LogGate
+├── docs/ # Project documentation
+├── internal/ # Application source code
+│ ├── adapters/ # Adapters (Ports and Adapters pattern)
+│ │ ├── input/ # Input adapters (e.g., UDP, TCP)
+│ │ └── output/ # Output adapters (e.g., console, clickhouse)
+│ ├── common/ # Shared code (logger, constants)
+│ ├── config/ # Configuration loading and parsing logic
+│ └── core/ # Core business logic
+│ ├── domain/ # Main data structures (e.g., LogMessage)
+│ ├── ports/ # Interfaces for interacting with the core
+│ └── service/ # Implementation of the main business logic
+├── scripts/ # Administration scripts (backup, restore)
+├── Makefile # Utilities for building, running, and managing
+├── go.mod / go.sum # Go dependencies
+└── docker-compose.yaml # Service stack definition
+```
 
-## 5.2. Добавление нового хранилища (Output Adapter)
+## 5.2. Adding a New Storage (Output Adapter)
 
-Архитектура LogGate позволяет легко добавлять поддержку новых систем хранения логов. Для этого нужно реализовать адаптер, который удовлетворяет интерфейсу `ports.LogStorage`.
+LogGate's architecture makes it easy to add support for new log storage systems. To do this, you need to implement an adapter that satisfies the `ports.LogStorage` interface.
 
-### Шаг 1: Реализация интерфейса `LogStorage`
+### Step 1: Implement the `LogStorage` Interface
 
-Интерфейс определен в `internal/core/ports/ports.go`:
+The interface is defined in `internal/core/ports/ports.go`:
 
 ```go
 type LogStorage interface {
-    // Store сохраняет пакет сообщений. Должен быть потокобезопасным.
+    // Store saves a batch of messages. Must be thread-safe.
     Store(ctx context.Context, messages []domain.LogMessage) error
-    // Close освобождает ресурсы (например, закрывает соединения с БД).
+    // Close releases resources (e.g., closes database connections).
     Close() error
 }
 ```
 
-**Пример:** Создадим адаптер для записи логов в файл.
+**Example:** Let's create an adapter to write logs to a file.
 
-1.  Создайте новую директорию: `internal/adapters/output/file/`
-2.  Создайте в ней файл `storage.go`:
+1.  Create a new directory: `internal/adapters/output/file/`
+2.  Create a `storage.go` file inside it:
 
 ```go
 // file: internal/adapters/output/file/storage.go
@@ -63,14 +63,14 @@ import (
 	"github.com/shanth1/loggate/internal/core/domain"
 )
 
-// Storage реализует ports.LogStorage для записи в файл.
+// Storage implements ports.LogStorage for writing to a file.
 type Storage struct {
 	file *os.File
 	mu   sync.Mutex
 }
 
-// New создает новый экземпляр File Storage.
-// path - это DSN из конфига.
+// New creates a new instance of File Storage.
+// path is the DSN from the config.
 func New(path string) (*Storage, error) {
 	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -86,7 +86,7 @@ func (s *Storage) Store(_ context.Context, messages []domain.LogMessage) error {
 	for _, msg := range messages {
 		raw, err := json.Marshal(msg)
 		if err != nil {
-			// В реальном приложении здесь нужна лучшая обработка ошибок
+			// In a real application, better error handling is needed here
 			continue
 		}
 		if _, err := s.file.Write(append(raw, '\n')); err != nil {
@@ -103,11 +103,11 @@ func (s *Storage) Close() error {
 }
 ```
 
-### Шаг 2: Интеграция адаптера в `main.go`
+### Step 2: Integrate the Adapter into `main.go`
 
-Теперь нужно "научить" приложение создавать ваш новый адаптер при старте.
+Now, you need to "teach" the application how to create your new adapter on startup.
 
-Отредактируйте `cmd/loggate/main.go`:
+Edit `cmd/loggate/main.go`:
 
 ```go
 // cmd/loggate/main.go
@@ -115,14 +115,14 @@ func (s *Storage) Close() error {
 package main
 
 import (
-    // ... другие импорты
+    // ... other imports
 	"github.com/shanth1/loggate/internal/adapters/output/console"
-    "github.com/shanth1/loggate/internal/adapters/output/file" // <-- 1. Импортируйте ваш пакет
+    "github.com/shanth1/loggate/internal/adapters/output/file" // <-- 1. Import your package
     // ...
 )
 
 func main() {
-    // ... (инициализация)
+    // ... (initialization)
 
 	storages := make(map[string]ports.LogStorage)
 
@@ -132,13 +132,13 @@ func main() {
 		}
 
 		var storage ports.LogStorage
-        var err error // <-- Добавим переменную для ошибок
+        var err error // <-- Add an error variable
 
 		switch storageCfg.Type {
 		case "console":
 			storage = console.New()
-		case "file": // <-- 2. Добавьте case для вашего типа
-            // DSN теперь используется как путь к файлу
+		case "file": // <-- 2. Add a case for your type
+            // DSN is now used as the file path
 			storage, err = file.New(storageCfg.DSN)
             if err != nil {
                 logger.Fatal().Err(err).Str("storage", storageName).Msg("failed to create file storage")
@@ -151,13 +151,13 @@ func main() {
 			storages[storageName] = storage
 		}
 	}
-    // ... (дальнейший код)
+    // ... (rest of the code)
 }
 ```
 
-### Шаг 3: Обновление конфигурации
+### Step 3: Update the Configuration
 
-Теперь вы можете использовать новый тип хранилища в `config/config.yaml`:
+You can now use the new storage type in `config/config.yaml`:
 
 ```yaml
 storages:
@@ -165,20 +165,20 @@ storages:
   file_output:
     type: 'file'
     enabled: true
-    dsn: '/tmp/loggate_output.log' # Путь к файлу логов
+    dsn: '/tmp/loggate_output.log' # Path to the log file
 
 routing_rules:
   - match_condition:
       service: 'inventory-service'
-    destinations: ['file_output'] # Направляем логи в файл
+    destinations: ['file_output'] # Route logs to the file
 ```
 
-После этих шагов LogGate сможет принимать логи и сохранять их в указанный файл.
+After these steps, LogGate will be able to receive logs and save them to the specified file.
 
-## 5.3. Использование генератора логов (`loggen`)
+## 5.3. Using the Log Generator (`loggen`)
 
-Утилита `loggen` — мощный инструмент для тестирования производительности и проверки правил маршрутизации. Её поведение настраивается в файле `cmd/loggen/config/config.yaml`.
+The `loggen` utility is a powerful tool for performance testing and verifying routing rules. Its behavior is configured in the `cmd/loggen/config/config.yaml` file.
 
-- `target`: Адрес LogGate.
-- `load`: Параметры нагрузки (`workers` - количество параллельных отправителей, `rps` - запросов в секунду на одного воркера).
-- `templates`: Шаблоны для генерации разнообразных логов. `gofakeit` используется для подстановки случайных данных в поля `{...}`.
+- `target`: The address of the LogGate service.
+- `load`: Load parameters (`workers` - number of concurrent senders, `rps` - requests per second per worker).
+- `templates`: Templates for generating diverse logs. `gofakeit` is used to substitute random data into the `{...}` fields.
