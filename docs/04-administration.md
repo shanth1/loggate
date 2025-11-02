@@ -72,9 +72,7 @@ The primary monitoring tool is the `LogGate Application` dashboard in Grafana (`
 
 ### Dashboard Panels
 
-<!-- SCREENSHOT LOCATION: General view of the Grafana dashboard -->
-
-**[INSERT DASHBOARD SCREENSHOT HERE]**
+![Dashboard](assets/dashboard.png)
 
 - **Key Metrics:**
   - `Total Log Rate`: The total number of log lines per second. Shows the overall system load.
@@ -84,9 +82,8 @@ The primary monitoring tool is the `LogGate Application` dashboard in Grafana (`
 
 - **Visualizations:**
   - `Log Volume by Level`: A time-series graph showing the distribution of logs by level. Helps to identify anomalies (e.g., a sudden spike in errors).
-    <!-- SCREENSHOT LOCATION: "Log Volume by Level" graph -->
 
-    **[INSERT "LOG VOLUME BY LEVEL" GRAPH SCREENSHOT HERE]**
+    ![Volume](assets/volume.png)
 
   - `Log Distribution by Service`: A pie chart showing which services generate the most logs over the selected time period.
 
@@ -94,8 +91,8 @@ The primary monitoring tool is the `LogGate Application` dashboard in Grafana (`
   - An interactive panel for viewing and searching logs in real-time.
   - Use the variables at the top of the dashboard (`Application`, `Service`, `Level`) to quickly filter by indexed labels.
   - Use the `Log Search` field for full-text search within log content (slower than filters).
-    <!-- SCREENSHOT LOCATION: Logs panel with a filter example -->
-    **[INSERT LOGS PANEL SCREENSHOT HERE]**
+
+    ![Logs](assets/logs.png)
 
 ### Manual Checks and Queries
 

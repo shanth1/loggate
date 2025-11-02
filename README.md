@@ -9,6 +9,10 @@
 
 The project comes with a ready-to-use monitoring stack based on **Prometheus, Grafana, and Loki**, providing a complete "out-of-the-box" solution for collecting, storing, and visualizing logs and metrics.
 
+![filters](docs/assets/filters.png)
+![Dashboard](docs/assets/dashboard.png)
+![Logs](docs/assets/logs.png)
+
 ## Key Features
 
 - **Centralized Ingestion:** Accepts structured JSON logs over UDP for minimal latency on the sender's side.
