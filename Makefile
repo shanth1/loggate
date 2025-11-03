@@ -116,7 +116,7 @@ shell:
 test-log:
 	@echo "Sending a reliably formatted test log..."
 	@TIMESTAMP=$$(date -u +'%Y-%m-%dT%H:%M:%SZ'); \
-	printf '{"timestamp":"%s","app":"manual-app","service":"manual-test","level":"info","message":"hello from make"}\n' "$$TIMESTAMP" | nc -u -w0 127.0.0.1 10514
+	printf '{"time":"%s","app":"manual-app","service":"manual-test","level":"info","message":"hello from make"}\n' "$$TIMESTAMP" | nc -u -w0 127.0.0.1 10514
 	@echo "Test log sent successfully."
 
 gen-logs:

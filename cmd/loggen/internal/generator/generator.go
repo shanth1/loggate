@@ -29,12 +29,12 @@ func (g *Generator) Generate() domain.LogMessage {
 	message := g.faker.Generate(messageTemplate)
 
 	return domain.LogMessage{
-		Timestamp: time.Now(),
-		Level:     level,
-		App:       g.template.App,
-		Service:   g.template.Service,
-		Message:   message,
-		Fields:    g.generateFields(),
+		Time:    time.Now(),
+		Level:   level,
+		App:     g.template.App,
+		Service: g.template.Service,
+		Message: message,
+		Fields:  g.generateFields(),
 	}
 }
 
