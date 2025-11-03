@@ -105,9 +105,9 @@ scrape_configs:
             level: level
             service: service
             trace_id: fields.trace_id # Example of extracting a nested field
-      # 2. Set the timestamp from the 'timestamp' field in the log
-      - timestamp:
-          source: timestamp
+      # 2. Set the time from the 'time' field in the log
+      - time:
+          source: time
           format: RFC3339
       # 3. Create Loki labels from the extracted fields
       - labels:
@@ -231,9 +231,9 @@ scrape_configs:
             level: level
             service: service
             trace_id: fields.trace_id # Пример извлечения вложенного поля
-      # 2. Установить временную метку из поля 'timestamp' в логе
-      - timestamp:
-          source: timestamp
+      # 2. Установить временную метку из поля 'time' в логе
+      - time:
+          source: time
           format: RFC3339
       # 3. Создать метки (labels) Loki из извлеченных полей
       - labels:
