@@ -103,9 +103,9 @@ scrape_configs:
             level: level
             service: service
             trace_id: fields.trace_id # Пример извлечения вложенного поля
-      # 2. Установить временную метку из поля 'timestamp' в логе
-      - timestamp:
-          source: timestamp
+      # 2. Установить временную метку из поля 'time' в логе
+      - time:
+          source: time
           format: RFC3339
       # 3. Создать метки (labels) Loki из извлеченных полей
       - labels:

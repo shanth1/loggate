@@ -1,4 +1,3 @@
-// file: internal/adapters/input/udp_listener/listener.go
 package udp
 
 import (
@@ -61,6 +60,10 @@ func (l *Listener) Start(ctx context.Context) {
 			if err := json.Unmarshal(buffer[:n], &msg); err != nil {
 				logger.Warn().Err(err).Msg("failed to unmarshal log")
 				continue
+			}
+
+			if msg.Time.IsZero() {
+				msg.Time = time.Now()
 			}
 
 			if msg.App == "" {
