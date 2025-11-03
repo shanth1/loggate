@@ -4,8 +4,8 @@ go 1.23.2
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.28.0
-	github.com/rs/zerolog v1.34.0
-	github.com/shanth1/gotools v0.3.0
+	github.com/prometheus/client_golang v1.22.0
+	github.com/shanth1/gotools v1.4.0
 	github.com/spf13/viper v1.20.1
 )
 
@@ -18,10 +18,10 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
-	github.com/prometheus/client_golang v1.22.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
+	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/sagikazarmark/locafero v0.9.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.14.0 // indirect

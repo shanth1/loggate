@@ -10,7 +10,14 @@ services:
     volumes:
       - ./config/config.yaml:/etc/loggate/config.yaml:ro
     restart: unless-stopped
-    command: ['/app/loggate_server', '-config', '/etc/loggate/config.yaml']
+    command:
+      [
+        '/app/loggate_server',
+        '-config',
+        '/etc/loggate/config.yaml',
+        '-env',
+        'production',
+      ]
     networks:
       - monitoring
     healthcheck:

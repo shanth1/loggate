@@ -1,3 +1,6 @@
+app: 'common'
+service: 'loggate'
+
 server:
   log_address: ':10514'
   info_address: ':9100'

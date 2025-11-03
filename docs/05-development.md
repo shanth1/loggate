@@ -16,12 +16,13 @@ This section is for developers who want to contribute to LogGate or extend its f
 │ ├── adapters/ # Adapters (Ports and Adapters pattern)
 │ │ ├── input/ # Input adapters (e.g., UDP, TCP)
 │ │ └── output/ # Output adapters (e.g., console, clickhouse)
-│ ├── common/ # Shared code (logger, constants)
+│ ├── app/ # Application start logic
+│ ├── common/ # Shared code
 │ ├── config/ # Configuration loading and parsing logic
 │ └── core/ # Core business logic
-│ ├── domain/ # Main data structures (e.g., LogMessage)
-│ ├── ports/ # Interfaces for interacting with the core
-│ └── service/ # Implementation of the main business logic
+│   ├── domain/ # Main data structures (e.g., LogMessage)
+│   ├── ports/ # Interfaces for interacting with the core
+│   └── service/ # Implementation of the main business logic
 ├── scripts/ # Administration scripts (backup, restore)
 ├── Makefile # Utilities for building, running, and managing
 ├── go.mod / go.sum # Go dependencies

@@ -15,7 +15,7 @@ import (
 )
 
 func Start(ctx context.Context, wg *sync.WaitGroup, id int, cfg *config.Config) {
-	logger := log.FromCtx(ctx).With().Int("id", id).Logger()
+	logger := log.FromContext(ctx).With(log.Int("id", id))
 
 	defer wg.Done()
 	logger.Info().Msg(fmt.Sprintf("[Worker %d] Starting...", id))
