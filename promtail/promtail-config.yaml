@@ -28,8 +28,8 @@ scrape_configs:
             level: level
             service: service
             trace_id: fields.trace_id
-      - time:
-          source: time
+      - timestamp:
+          source: timestamp
           format: RFC3339
       - labels:
           app:
