@@ -22,18 +22,20 @@ scrape_configs:
         target_label: 'container'
 
     pipeline_stages:
+      - docker: {}
       - json:
           expressions:
             app: app
             level: level
             service: service
             trace_id: fields.trace_id
-      - time:
+            time: time
+      - timestamp:
           source: time
-          format: RFC3339
+          format: RFC3339Nano
       - labels:
           app:
           level:
           service:
       - output:
-          source: 'log'
+          source: log

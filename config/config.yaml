@@ -23,7 +23,7 @@ storages:
 routing_rules:
   - match_condition:
       service: 'auth-service'
-      level: 'INFO'
+      level: 'info'
     destinations: ['console_debug']
 
   - match_condition:

@@ -47,7 +47,7 @@ func (g *Generator) pickLevel() string {
 			return level
 		}
 	}
-	return "INFO" // Fallback
+	return "info" // Fallback
 }
 
 func (g *Generator) pickMessage(level string) string {
