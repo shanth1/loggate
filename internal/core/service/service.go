@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -19,6 +20,9 @@ type LogService struct {
 	routingRules        []*config.RoutingRule
 	defaultDestinations []string
 	performance         *config.Performance
+
+	lastTimestamps map[string]time.Time
+	tsMutex        sync.Mutex
 }
 
 func NewLogService(
@@ -43,6 +47,7 @@ func NewLogService(
 		routingRules:        routingRules,
 		defaultDestinations: defaultDestinations,
 		performance:         performance,
+		lastTimestamps:      make(map[string]time.Time),
 	}
 }
 
@@ -64,6 +69,17 @@ func (s *LogService) Start(ctx context.Context) {
 
 func (s *LogService) Ingest(ctx context.Context, msg domain.LogMessage) {
 	logger := log.FromContext(ctx)
+
+	s.tsMutex.Lock()
+	streamKey := fmt.Sprintf("%s-%s-%s", msg.App, msg.Service, msg.Level)
+	lastTs := s.lastTimestamps[streamKey]
+
+	if !msg.Time.After(lastTs) {
+		msg.Time = lastTs.Add(1 * time.Nanosecond)
+	}
+
+	s.lastTimestamps[streamKey] = msg.Time
+	s.tsMutex.Unlock()
 
 	destinations := s.findDestinations(msg)
 	if len(destinations) == 0 {

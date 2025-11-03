@@ -5,7 +5,7 @@ go 1.23.2
 require (
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/prometheus/client_golang v1.22.0
-	github.com/shanth1/gotools v1.4.0
+	github.com/shanth1/gotools v1.4.2
 	github.com/spf13/viper v1.20.1
 )
 

@@ -3,7 +3,6 @@ package udp
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net"
 	"time"
 
@@ -34,7 +33,7 @@ func New(address string, ingester ports.LogIngester) (*Listener, error) {
 func (l *Listener) Start(ctx context.Context) {
 	logger := log.FromContext(ctx)
 
-	logger.Info().Msg(fmt.Sprintf("udp listener started on %s", l.conn.LocalAddr()))
+	logger.Info().Str("address", l.conn.LocalAddr().String()).Msg("udp listener started")
 
 	defer l.conn.Close()
 
@@ -58,7 +57,7 @@ func (l *Listener) Start(ctx context.Context) {
 
 			var msg domain.LogMessage
 			if err := json.Unmarshal(buffer[:n], &msg); err != nil {
-				logger.Warn().Err(err).Msg("failed to unmarshal log")
+				logger.Warn().Err(err).Str("raw_log", string(buffer[:n])).Msg("failed to unmarshal log")
 				continue
 			}
 
