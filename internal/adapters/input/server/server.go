@@ -20,7 +20,7 @@ func New(infoAddr string) *server {
 }
 
 func (s *server) Start(ctx context.Context) {
-	logger := log.FromCtx(ctx)
+	logger := log.FromContext(ctx)
 
 	http.Handle("/metrics", promhttp.Handler())
 	if err := http.ListenAndServe(s.infoAddr, nil); err != nil {

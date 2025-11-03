@@ -1,83 +1,51 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"os/signal"
-	"syscall"
+	"flag"
+	"time"
 
-	"github.com/shanth1/loggate/internal/adapters/input/server"
-	"github.com/shanth1/loggate/internal/adapters/input/udp"
-	"github.com/shanth1/loggate/internal/adapters/output/console"
-	"github.com/shanth1/loggate/internal/common"
+	"github.com/shanth1/gotools/conf"
+	"github.com/shanth1/gotools/consts"
+	"github.com/shanth1/gotools/ctx"
+	"github.com/shanth1/gotools/flags"
+	"github.com/shanth1/gotools/log"
+	"github.com/shanth1/loggate/internal/app"
 	"github.com/shanth1/loggate/internal/config"
-	"github.com/shanth1/loggate/internal/core/ports"
-	"github.com/shanth1/loggate/internal/core/service"
 )
 
+type Flags struct {
+	Env        string `flag:"env" default:"local" usage:"Environment ('local' | 'development' | 'production')"`
+	Level      string `flag:"level" default:"info" usage:"Level of logging ('trace' | 'debug' | 'info' | 'warn')"`
+	ConfigPath string `flag:"config" usage:"Path to the YAML config file"`
+}
+
 func main() {
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	ctx, shutdownCtx, cancel, shutdownCancel := ctx.WithGracefulShutdown(10 * time.Second)
 	defer cancel()
+	defer shutdownCancel()
 
 	// --- Сonfig ---
-	cfg := config.MustGetConfig()
+	logger := log.New()
 
-	logger := common.GetLogger()
-	ctx = logger.WithContext(ctx)
+	flagCfg := &Flags{}
+	if err := flags.RegisterFromStruct(flagCfg); err != nil {
+		logger.Fatal().Err(err).Msg("register flags")
+	}
+	flag.Parse()
 
-	// --- Output/Driven Adapters ---
-
-	// TODO: refactor:
-	storages := make(map[string]ports.LogStorage)
-
-	for storageName, storageCfg := range cfg.Storages {
-		if !storageCfg.Enabled {
-			continue
-		}
-
-		var storage ports.LogStorage
-		switch storageCfg.Type {
-		case "console":
-			storage = console.New()
-		default:
-			logger.Warn().Msg(fmt.Sprintf("storage type '%s' is enabled but not implemented, skipping", storageCfg.Type))
-		}
-
-		if storage != nil {
-			storages[storageName] = storage
-		}
+	cfg := &config.Config{}
+	if err := conf.Load(flagCfg.ConfigPath, cfg); err != nil {
+		logger.Fatal().Err(err).Msg("load config")
 	}
 
-	if len(storages) == 0 {
-		logger.Fatal().Msg("no active storages configured")
-	}
+	logger = logger.WithOptions(log.WithConfig(log.Config{
+		Level:      flagCfg.Env,
+		App:        cfg.App,
+		Service:    cfg.Service,
+		Console:    flagCfg.Env != consts.EnvProd,
+		JSONOutput: flagCfg.Env == consts.EnvProd,
+	}))
 
-	// --- Core ---
-	logService := service.NewLogService(storages, cfg.RoutingRules, cfg.DefaultDestinations, cfg.Performance)
-
-	// --- Input/Driver Adapter ---
-	infoServer := server.New(cfg.Server.InfoAddress)
-
-	udpListener, err := udp.New(cfg.Server.LogAddress, logService)
-	if err != nil {
-		logger.Fatal().Err(err).Msg("new udp adapter")
-	}
-
-	// --- Start ---
-	go logService.Start(ctx)
-	go udpListener.Start(ctx)
-	go infoServer.Start(ctx)
-
-	// --- Graceful Shutdown ---
-	<-ctx.Done()
-
-	logger.Info().Msg("shutting down server...")
-
-	for name, s := range storages {
-		if err := s.Close(); err != nil {
-			logger.Error().Err(err).Str("storage", name).Msg("close storage")
-		}
-	}
-
-	logger.Info().Msg("server gracefully stopped")
+	ctx = log.NewContext(ctx, logger)
+	app.Run(ctx, shutdownCtx, cfg)
 }

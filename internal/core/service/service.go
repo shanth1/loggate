@@ -47,7 +47,7 @@ func NewLogService(
 }
 
 func (s *LogService) Start(ctx context.Context) {
-	logger := log.FromCtx(ctx)
+	logger := log.FromContext(ctx)
 	logger.Info().Msg("starting log service workers")
 
 	for name, storage := range s.storages {
@@ -63,7 +63,7 @@ func (s *LogService) Start(ctx context.Context) {
 }
 
 func (s *LogService) Ingest(ctx context.Context, msg domain.LogMessage) {
-	logger := log.FromCtx(ctx)
+	logger := log.FromContext(ctx)
 
 	destinations := s.findDestinations(msg)
 	if len(destinations) == 0 {
@@ -85,7 +85,7 @@ func (s *LogService) Ingest(ctx context.Context, msg domain.LogMessage) {
 
 func (s *LogService) runWorker(ctx context.Context, name string, storage ports.LogStorage, channel <-chan domain.LogMessage) {
 	defer s.wg.Done()
-	logger := log.FromCtx(ctx).With().Str("storage", name).Logger()
+	logger := log.FromContext(ctx).With(log.Str("storage", name))
 
 	batchSize := s.performance.BatchSize
 	batchTimeout := time.Duration(s.performance.BatchTimeoutMs) * time.Millisecond

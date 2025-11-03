@@ -7,13 +7,13 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/shanth1/gotools/log"
 	"github.com/shanth1/loggate/cmd/loggen/internal/config"
 	"github.com/shanth1/loggate/cmd/loggen/internal/worker"
-	"github.com/shanth1/loggate/internal/common"
 )
 
 func main() {
-	logger := common.GetGenLogger()
+	logger := log.New()
 
 	logger.Info().Msg("starting log generator...")
 
@@ -23,7 +23,7 @@ func main() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	ctx = logger.WithContext(ctx)
+	ctx = log.NewContext(ctx, logger)
 	var wg sync.WaitGroup
 
 	for i := 0; i < cfg.Load.Workers; i++ {

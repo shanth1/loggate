@@ -1,21 +1,8 @@
 package config
 
-import (
-	"log"
-
-	"github.com/shanth1/gotools/conf"
-)
-
-func MustGetConfig() *Config {
-	cfg := &Config{}
-	if err := conf.Load(conf.GetConfigPath(), cfg); err != nil {
-		log.Fatalf("load config: %v", err)
-	}
-
-	return cfg
-}
-
 type Config struct {
+	App                 string              `mapstructure:"app"`
+	Service             string              `mapstructure:"service"`
 	Server              *Server             `mapstructure:"server"`
 	Performance         *Performance        `mapstructure:"performance"`
 	Storages            map[string]*Storage `mapstructure:"storages"`

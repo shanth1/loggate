@@ -33,7 +33,7 @@ func New(address string, ingester ports.LogIngester) (*Listener, error) {
 }
 
 func (l *Listener) Start(ctx context.Context) {
-	logger := log.FromCtx(ctx)
+	logger := log.FromContext(ctx)
 
 	logger.Info().Msg(fmt.Sprintf("udp listener started on %s", l.conn.LocalAddr()))
 
